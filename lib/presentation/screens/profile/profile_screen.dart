@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -11,31 +13,47 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isBannerExpanded = true;
 
+  Future<void> _launchWhatsApp() async {
+    const phoneNumber = '2250000000000'; // Numéro fictif pour l'exemple
+    const message = 'Bonjour, j\'ai besoin d\'aide avec l\'application Passe Voyage.';
+    final Uri url = Uri.parse('https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
+    
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Impossible d\'ouvrir WhatsApp')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FA), // Light premium background
+      backgroundColor: AppColors.background, // Light premium background
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.primary, size: 24),
+          icon: Icon(Icons.arrow_back, color: AppColors.primary, size: 24.w),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        padding: EdgeInsets.symmetric(horizontal: 20.0.w),
         child: Column(
           children: [
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
             
             // Profile Header Card
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(24.r),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.03),
@@ -49,27 +67,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   CircleAvatar(
                     radius: 28,
                     backgroundColor: Colors.blueGrey.shade100,
-                    child: const Icon(Icons.person, color: AppColors.primary, size: 32),
+                    child: Icon(Icons.person, color: AppColors.primary, size: 32.w),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16.w),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'Ibrahim Cisse',
                           style: TextStyle(
                             color: Colors.black87,
-                            fontSize: 18,
+                            fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        SizedBox(height: 4.h),
                         Text(
                           '05 55 56 84 05',
                           style: TextStyle(
                             color: Colors.black54,
-                            fontSize: 15,
+                            fontSize: 15.sp,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -77,16 +95,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Row(
-                      children: const [
+                      children: [
                         Text('Mon profil', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87)),
-                        SizedBox(width: 4),
-                        Icon(Icons.chevron_right, size: 18, color: Colors.black87),
+                        SizedBox(width: 4.w),
+                        Icon(Icons.chevron_right, size: 18.w, color: Colors.black87),
                       ],
                     ),
                   )
@@ -94,110 +112,147 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             
-            const SizedBox(height: 24),
+            SizedBox(height: 24.h),
             
             // Identification Banner
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF6E29E), // Light amber/beige background
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Bienvenue chez AGIR',
-                          style: TextStyle(
-                            color: Color(0xFF0F3A4B),
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+            AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
+              child: Container(
+                padding: EdgeInsets.all(20.w),
+                decoration: BoxDecoration(
+                  color: AppColors.tertiary.withOpacity(0.2), // Light amber/beige background
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isBannerExpanded = !_isBannerExpanded;
+                        });
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Bienvenue chez Passe Voyage',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            _isBannerExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                            color: AppColors.primary,
+                            size: 28.w,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!_isBannerExpanded) ...[
+                      SizedBox(height: 12.h),
+                      GestureDetector(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Action d'identification à venir")),
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(24.r),
+                          ),
+                          child: Text(
+                            'Identifiez-vous et débloquez votre compte !',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.sp,
+                            ),
                           ),
                         ),
                       ),
+                    ] else ...[
+                      SizedBox(height: 12.h),
+                      Text(
+                        'Complétez votre identification sous 14 jours pour profiter pleinement de votre compte Passe Voyage !',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 14.sp,
+                          height: 1.4.h,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
                       GestureDetector(
                         onTap: () {
-                          setState(() {
-                            _isBannerExpanded = !_isBannerExpanded;
-                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Action d'identification à venir")),
+                          );
                         },
-                        child: Icon(
-                          _isBannerExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                          color: const Color(0xFF0F3A4B),
-                          size: 28,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(24.r),
+                          ),
+                          child: Text(
+                            'Identifiez-vous !',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14.sp,
+                            ),
+                          ),
                         ),
                       ),
                     ],
-                  ),
-                  if (_isBannerExpanded) ...[
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Complétez votre identification sous 14 jours pour profiter pleinement de votre compte AGIR !',
-                      style: TextStyle(
-                        color: Color(0xFF0F3A4B),
-                        fontSize: 14,
-                        height: 1.4,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: const Text(
-                        'Identifiez-vous !',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
                   ],
-                ],
+                ),
               ),
             ),
             
-            const SizedBox(height: 24),
+            SizedBox(height: 24.h),
             
             // Menu List
             _buildMenuItem(Icons.settings_outlined, 'Paramètres', onTap: () {
               Navigator.pushNamed(context, '/settings');
             }),
             _buildMenuItem(Icons.notifications_none_outlined, 'Notifications'),
-            _buildMenuItem(Icons.storefront_outlined, 'Trouver une agence', onTap: () {
-              Navigator.pushNamed(context, '/agences');
+            _buildMenuItem(Icons.storefront_outlined, 'Trouver une gare', onTap: () {
+              Navigator.pushNamed(context, '/gares');
             }),
-            _buildMenuItem(Icons.headset_mic_outlined, 'Aide et assistance'),
+            _buildMenuItem(Icons.headset_mic_outlined, 'Aide et assistance', onTap: _launchWhatsApp),
             
-            const SizedBox(height: 40),
+            SizedBox(height: 40.h),
             
             // Footer
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: EdgeInsets.all(4.w),
                   color: AppColors.success,
-                  child: const Text('BNI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
+                  child: Text('BNI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10.sp)),
                 ),
-                const SizedBox(width: 12),
-                const Text('VISA', style: TextStyle(color: Color(0xFF1434CB), fontWeight: FontWeight.w900, fontSize: 20, fontStyle: FontStyle.italic)),
+                SizedBox(width: 12.w),
+                Text('VISA', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 20.sp, fontStyle: FontStyle.italic)),
               ],
             ),
-            const SizedBox(height: 8),
-            const Text('Version 3.4.2 631', style: TextStyle(color: Colors.grey, fontSize: 12)),
-            const SizedBox(height: 12),
-            const Text('Conditions générales', style: TextStyle(color: Colors.grey, fontSize: 13)),
-            const SizedBox(height: 24),
+            SizedBox(height: 8.h),
+            Text('Version 3.4.2 631', style: TextStyle(color: Colors.grey, fontSize: 12.sp)),
+            SizedBox(height: 12.h),
+            Text('Conditions générales', style: TextStyle(color: Colors.grey, fontSize: 13.sp)),
+            SizedBox(height: 24.h),
             
             // Logout Button
             TextButton(
@@ -206,22 +261,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-                      title: const Text(
+                      title: Text(
                         'Déconnexion',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F3A4B)),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
                       ),
-                      content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      content: Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('Annuler', style: TextStyle(color: Colors.grey)),
+                          child: Text('Annuler', style: TextStyle(color: Colors.grey)),
                         ),
                         TextButton(
                           onPressed: () {
                             Navigator.pushNamedAndRemoveUntil(context, '/phone_entry', (route) => false);
                           },
-                          child: const Text('Se déconnecter', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                          child: Text('Se déconnecter', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     );
@@ -230,23 +285,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 12.h),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(24.r),
                 ),
                 elevation: 2,
               ),
-              child: const Text(
+              child: Text(
                 'Se déconnecter',
                 style: TextStyle(
-                  color: Color(0xFF0F3A4B),
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                 ),
               ),
             ),
             
-            const SizedBox(height: 40),
+            SizedBox(height: 40.h),
           ],
         ),
       ),
@@ -257,11 +312,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        margin: EdgeInsets.only(bottom: 12.h),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.02),
@@ -272,19 +327,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.primary, size: 24),
-            const SizedBox(width: 16),
+            Icon(icon, color: AppColors.primary, size: 24.w),
+            SizedBox(width: 16.w),
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.primary,
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.primary, size: 20),
+            Icon(Icons.chevron_right, color: AppColors.primary, size: 20.w),
           ],
         ),
       ),

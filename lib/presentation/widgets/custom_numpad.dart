@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CustomNumpad extends StatelessWidget {
   final Function(String) onKeyPressed;
@@ -18,11 +19,11 @@ class CustomNumpad extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildRow(['1', '2', '3']),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         _buildRow(['4', '5', '6']),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         _buildRow(['7', '8', '9']),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -45,15 +46,15 @@ class CustomNumpad extends StatelessWidget {
   Widget _buildKey(String value) {
     return InkWell(
       onTap: () => onKeyPressed(value),
-      borderRadius: BorderRadius.circular(40),
+      borderRadius: BorderRadius.circular(40.r),
       child: Container(
-        width: 80,
-        height: 80,
+        width: 80.w,
+        height: 80.h,
         alignment: Alignment.center,
         child: Text(
           value,
-          style: const TextStyle(
-            fontSize: 28,
+          style: TextStyle(
+            fontSize: 28.sp,
             fontWeight: FontWeight.w500,
             color: Colors.black87,
           ),
@@ -65,14 +66,14 @@ class CustomNumpad extends StatelessWidget {
   Widget _buildDeleteKey() {
     return InkWell(
       onTap: onDelete,
-      borderRadius: BorderRadius.circular(40),
+      borderRadius: BorderRadius.circular(40.r),
       child: Container(
-        width: 80,
-        height: 80,
+        width: 80.w,
+        height: 80.h,
         alignment: Alignment.center,
-        child: const Icon(
+        child: Icon(
           Icons.backspace,
-          size: 24,
+          size: 24.w,
           color: Colors.black87,
         ),
       ),
@@ -80,9 +81,9 @@ class CustomNumpad extends StatelessWidget {
   }
 
   Widget _buildEmptyKey() {
-    return const SizedBox(
-      width: 80,
-      height: 80,
+    return SizedBox(
+      width: 80.w,
+      height: 80.h,
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../widgets/premium_background.dart';
 
 class FacturesScreen extends StatelessWidget {
@@ -12,12 +13,12 @@ class FacturesScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           "Factures",
-          style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.w500),
+          style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.w500),
         ),
         centerTitle: false,
       ),
@@ -27,23 +28,23 @@ class FacturesScreen extends StatelessWidget {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                const SizedBox(height: 10),
+                SizedBox(height: 10.h),
             
             // Canal+
             _buildFactureItem(
               iconWidget: Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
+                width: 48.w,
+                height: 48.h,
+                decoration: BoxDecoration(
                   color: Colors.grey,
                   shape: BoxShape.circle,
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'CANAL+',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 10,
+                      fontSize: 10.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -94,8 +95,8 @@ class FacturesScreen extends StatelessWidget {
 
   Widget _buildLogoPlaceholder(String text, Color bgColor) {
     return Container(
-      width: 48,
-      height: 48,
+      width: 48.w,
+      height: 48.h,
       decoration: BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
@@ -104,7 +105,7 @@ class FacturesScreen extends StatelessWidget {
       child: Center(
         child: Text(
           text,
-          style: TextStyle(color: bgColor, fontSize: 12, fontWeight: FontWeight.bold),
+          style: TextStyle(color: bgColor, fontSize: 12.sp, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -112,8 +113,8 @@ class FacturesScreen extends StatelessWidget {
 
   Widget _buildCieSodeciLogo(String text, {bool isSodeci = false}) {
     return Container(
-      width: 48,
-      height: 48,
+      width: 48.w,
+      height: 48.h,
       decoration: BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
@@ -125,11 +126,11 @@ class FacturesScreen extends StatelessWidget {
           children: [
             Text(
               text.substring(0, isSodeci ? 3 : 1),
-              style: TextStyle(color: isSodeci ? Colors.green[700] : Colors.orange[700], fontSize: 10, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isSodeci ? Colors.green[700] : Colors.orange[700], fontSize: 10.sp, fontWeight: FontWeight.bold),
             ),
             Text(
               text.substring(isSodeci ? 3 : 1),
-              style: TextStyle(color: isSodeci ? Colors.green[900] : Colors.green[700], fontSize: 10, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isSodeci ? Colors.green[900] : Colors.green[700], fontSize: 10.sp, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -151,11 +152,11 @@ class FacturesScreen extends StatelessWidget {
         InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            padding: EdgeInsets.symmetric(horizontal: 20.0.w, vertical: 12.0.h),
             child: Row(
               children: [
                 iconWidget,
-                const SizedBox(width: 16),
+                SizedBox(width: 16.w),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,17 +164,17 @@ class FacturesScreen extends StatelessWidget {
                       Text(
                         title,
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 16.sp,
                           fontWeight: FontWeight.w500,
                           color: titleColor ?? Colors.black87,
                         ),
                       ),
                       if (subtitle != null) ...[
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4.h),
                         Text(
                           subtitle,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 14.sp,
                             color: subtitleColor ?? Colors.grey[600],
                           ),
                         ),
@@ -188,8 +189,8 @@ class FacturesScreen extends StatelessWidget {
         ),
         if (showDivider)
           Padding(
-            padding: const EdgeInsets.only(left: 84.0, right: 20.0),
-            child: Divider(height: 1, color: Colors.grey[200]),
+            padding: EdgeInsets.only(left: 84.0.w, right: 20.0.w),
+            child: Divider(height: 1.h, color: Colors.grey[200]),
           ),
       ],
     );

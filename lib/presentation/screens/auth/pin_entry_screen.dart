@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../widgets/custom_numpad.dart';
 import '../../../config/routes.dart';
 import '../../../core/theme/app_colors.dart';
@@ -24,10 +25,9 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
       // Auto-validate and navigate when 4 digits are entered
       if (_pinCode.length == 4) {
         Future.delayed(const Duration(milliseconds: 200), () {
-          Navigator.pushNamedAndRemoveUntil(
+          Navigator.pushNamed(
             context,
-            AppRoutes.dashboard,
-            (route) => false, // Remove all previous routes
+            AppRoutes.personalInfo,
           );
         });
       }
@@ -45,50 +45,50 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
             
             // Lock Icon
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: AppColors.primary, // Dark blue from screenshot
-                  width: 3,
+                  width: 3.w,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.lock,
                 color: AppColors.primary,
-                size: 28,
+                size: 28.w,
               ),
             ),
             
-            const SizedBox(height: 30),
+            SizedBox(height: 30.h),
             
             // Text Message
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              padding: EdgeInsets.symmetric(horizontal: 40.0.w),
               child: Text(
                 'Entrez votre code secret pour le\ncompte ${widget.phoneNumber}',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 18,
+                style: TextStyle(
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                  height: 1.3,
+                  color: AppColors.textPrimary,
+                  height: 1.3.h,
                 ),
               ),
             ),
@@ -101,12 +101,12 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
               children: List.generate(4, (index) {
                 final isFilled = index < _pinCode.length;
                 return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 12),
-                  width: 14,
-                  height: 14,
+                  margin: EdgeInsets.symmetric(horizontal: 12.w),
+                  width: 14.w,
+                  height: 14.h,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isFilled ? AppColors.primary : const Color(0xFFB3E5FC), // Light blue for empty, primary for filled
+                    color: isFilled ? AppColors.primary : AppColors.primary.withOpacity(0.2), // Light blue for empty, primary for filled
                   ),
                 );
               }),
@@ -122,24 +122,24 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
                 onTap: () {
                   // TODO: Implement forgot PIN logic
                 },
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: BorderRadius.circular(40.r),
                 child: Container(
-                  width: 80,
-                  height: 80,
+                  width: 80.w,
+                  height: 80.h,
                   alignment: Alignment.center,
-                  child: const Text(
+                  child: Text(
                     'OUBLIÉ?',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 14.sp,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
               ),
             ),
             
-            const SizedBox(height: 30),
+            SizedBox(height: 30.h),
           ],
         ),
       ),

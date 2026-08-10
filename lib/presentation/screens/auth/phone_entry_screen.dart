@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../widgets/custom_numpad.dart';
 import '../../../config/routes.dart';
 import '../../../core/theme/app_colors.dart';
@@ -142,15 +143,15 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text(
+          title: Text(
             'Sélectionnez un pays',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.sp),
           ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
           content: SizedBox(
             width: double.maxFinite,
-            height: 400,
+            height: 400.h,
             child: ListView.builder(
               itemCount: _countries.length,
               itemBuilder: (context, index) {
@@ -170,24 +171,24 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     Navigator.pop(context);
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
                     child: Row(
                       children: [
-                        Text(country['flag']!, style: const TextStyle(fontSize: 24)),
-                        const SizedBox(width: 12),
+                        Text(country['flag']!, style: TextStyle(fontSize: 24.sp)),
+                        SizedBox(width: 12.w),
                         Text(
                           country['name']!,
-                          style: const TextStyle(fontSize: 16, color: Colors.black87),
+                          style: TextStyle(fontSize: 16.sp, color: AppColors.textPrimary),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6.w),
                         Text(
                           country['code']!,
-                          style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
                         ),
                         const Spacer(),
                         Icon(
                           isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
-                          color: isSelected ? AppColors.primary : Colors.grey,
+                          color: isSelected ? AppColors.primary : AppColors.textSecondary,
                         ),
                       ],
                     ),
@@ -204,21 +205,21 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 40),
+            SizedBox(height: 40.h),
             // Title
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.0),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.0.w),
               child: Text(
                 'Bienvenue chez Passe Voyage ! Pour commencer, entrez votre numéro mobile',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),
@@ -226,29 +227,29 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
             
             // Input Field
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              padding: EdgeInsets.symmetric(horizontal: 40.0.w),
               child: Row(
                 children: [
                   // Country Code Selection
                   GestureDetector(
                     onTap: _showCountryDialog,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                       color: Colors.transparent,
                       child: Row(
                         children: [
-                          Text(_selectedFlag, style: const TextStyle(fontSize: 22)),
-                          const SizedBox(width: 8),
+                          Text(_selectedFlag, style: TextStyle(fontSize: 22.sp)),
+                          SizedBox(width: 8.w),
                           Text(
                             _selectedCode,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w500),
                           ),
-                          const Icon(Icons.keyboard_arrow_down, size: 20),
+                          Icon(Icons.keyboard_arrow_down, size: 20.w),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8.w),
                   // Phone Number TextField
                   Expanded(
                     child: TextField(
@@ -256,30 +257,30 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                       focusNode: _focusNode,
                       readOnly: true, // Prevents system keyboard
                       showCursor: true, // Forces cursor to blink
-                      cursorColor: Colors.black87,
+                      cursorColor: AppColors.textPrimary,
                       cursorWidth: 2.0,
-                      style: const TextStyle(
-                        fontSize: 22,
+                      style: TextStyle(
+                        fontSize: 22.sp,
                         letterSpacing: 2.0,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                       decoration: InputDecoration(
                         hintText: _currentHint,
-                        hintStyle: const TextStyle(
-                          fontSize: 22,
+                        hintStyle: TextStyle(
+                          fontSize: 22.sp,
                           letterSpacing: 2.0,
-                          color: Colors.grey,
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.normal,
                         ),
-                        enabledBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: AppColors.primary, width: 2),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: AppColors.primary, width: 2.w),
                         ),
-                        focusedBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: AppColors.primary, width: 2),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: AppColors.primary, width: 2.w),
                         ),
                         isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                        contentPadding: EdgeInsets.symmetric(vertical: 8.h),
                       ),
                     ),
                   ),
@@ -295,11 +296,11 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
               onDelete: _onDelete,
             ),
             
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
             
             // Next Button
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding: EdgeInsets.symmetric(horizontal: 24.0.w, vertical: 16.0.h),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -308,16 +309,16 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     backgroundColor: AppColors.primary,
                     disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(30.r),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Suivant',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.background,
                     ),
                   ),
                 ),

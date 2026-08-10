@@ -15,4 +15,5 @@ class AppColors {
   static const Color numpadKeyBackground = Colors.transparent;
   static const Color numpadKeyText = Color(0xFF1E1E1E);
   static const Color buttonText = Colors.white;
+
 }
