@@ -14,10 +14,47 @@ class DemandeCreditScreen extends StatefulWidget {
 class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
   String? _departureCity;
   String? _arrivalCity;
+  String? _selectedCompany; // <-- Added
   DateTime? _selectedDate;
   DateTime? _returnDate;
   int _passengerCount = 1;
   bool _isRoundTrip = false;
+
+  int _getBasePrice(String from, String to) {
+    final route = [from, to]..sort();
+    final key = route.join('-');
+    
+    // Matrice des prix simulée
+    final Map<String, int> prices = {
+      'Abidjan-Yamoussoukro': 4000,
+      'Abidjan-Bouaké': 6000,
+      'Abidjan-Korhogo': 10000,
+      'Abidjan-San-Pédro': 7000,
+      'Abidjan-Daloa': 6500,
+      'Abidjan-Man': 8000,
+      'Abidjan-Odienné': 12000,
+      'Bouaké-Yamoussoukro': 2500,
+      'Bouaké-Korhogo': 4000,
+    };
+    
+    return prices[key] ?? 5000; // Prix par défaut si trajet non défini
+  }
+
+  int? get _estimatedPrice {
+    if (_selectedCompany == null || _departureCity == null || _arrivalCity == null) return null;
+    int basePrice = _getBasePrice(_departureCity!, _arrivalCity!);
+    
+    // Majoration fictive selon la compagnie (+1000 FCFA pour certaines)
+    if (_selectedCompany == 'UTB' || _selectedCompany == 'CTE') {
+      basePrice += 0;
+    }
+    
+    return basePrice * _passengerCount * (_isRoundTrip ? 2 : 1);
+  }
+
+  int get _serviceFee {
+    return 600 * _passengerCount * (_isRoundTrip ? 2 : 1);
+  }
 
   final List<String> _cities = [
     'Abidjan',
@@ -88,10 +125,10 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
   }
 
   void _proceedToSummary() {
-    if (_departureCity == null || _arrivalCity == null || _selectedDate == null || (_isRoundTrip && _returnDate == null)) {
+    if (_selectedCompany == null || _departureCity == null || _arrivalCity == null || _selectedDate == null || (_isRoundTrip && _returnDate == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Veuillez remplir tous les champs obligatoires.'),
+          content: Text('Veuillez remplir tous les champs (compagnie, villes, dates).'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -109,6 +146,7 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
     }
 
     Navigator.pushNamed(context, AppRoutes.dashboard, arguments: {
+      'company': _selectedCompany,
       'departure': _departureCity,
       'arrival': _arrivalCity,
       'date': _selectedDate,
@@ -116,32 +154,37 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
       'isRoundTrip': _isRoundTrip,
       'passengers': _passengerCount,
       'pricePerTicket': 5000,
+      'totalPrice': _estimatedPrice,
     });
   }
 
   Widget _buildPartnerCard(String name) {
-    return Container(
-      margin: EdgeInsets.only(right: 12.w, bottom: 4.h, top: 4.h),
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.directions_bus, color: AppColors.primary, size: 16.w),
-          SizedBox(width: 8.w),
-          Text(name, style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary, fontSize: 13.sp)),
-        ],
+    final bool isSelected = _selectedCompany == name;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedCompany = name),
+      child: Container(
+        margin: EdgeInsets.only(right: 12.w, bottom: 4.h, top: 4.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(24.r),
+          border: Border.all(color: isSelected ? AppColors.primary : Colors.grey[200]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.directions_bus, color: isSelected ? Colors.white : AppColors.primary, size: 16.w),
+            SizedBox(width: 8.w),
+            Text(name, style: TextStyle(fontWeight: FontWeight.w600, color: isSelected ? Colors.white : AppColors.primary, fontSize: 13.sp)),
+          ],
+        ),
       ),
     );
   }
@@ -409,7 +452,40 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
               ),
             ),
             
-            SizedBox(height: 40.h),
+            if (_estimatedPrice != null) ...[
+              SizedBox(height: 24.h),
+              Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Crédit demandé (Transport)', style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
+                        Text('${NumberFormat('#,###', 'fr_FR').format(_estimatedPrice)} FCFA', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15.sp)),
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+                    Divider(color: AppColors.primary.withOpacity(0.1), height: 1),
+                    SizedBox(height: 12.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Frais de service (À payer)', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 16.sp)),
+                        Text('${NumberFormat('#,###', 'fr_FR').format(_serviceFee)} FCFA', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 18.sp)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            
+            SizedBox(height: 24.h),
             
             SizedBox(
               width: double.infinity,
@@ -420,7 +496,10 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                 ),
-                child: Text('Faire la demande de crédit', style: TextStyle(fontSize: 18.sp, color: Colors.white)),
+                child: Text(
+                  'Faire la demande de crédit', 
+                  style: TextStyle(fontSize: 18.sp, color: Colors.white, fontWeight: FontWeight.bold)
+                ),
               ),
             ),
           ],
