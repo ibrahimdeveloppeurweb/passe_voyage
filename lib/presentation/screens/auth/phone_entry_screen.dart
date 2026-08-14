@@ -225,18 +225,30 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
             ),
             const Spacer(),
             
-            // Input Field
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40.0.w),
-              child: Row(
-                children: [
-                  // Country Code Selection
-                  GestureDetector(
-                    onTap: _showCountryDialog,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                      color: Colors.transparent,
-                      child: Row(
+              padding: EdgeInsets.symmetric(horizontal: 24.0.w),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Country Code Selection
+                    GestureDetector(
+                      onTap: _showCountryDialog,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+                        color: Colors.transparent,
+                        child: Row(
                         children: [
                           Text(_selectedFlag, style: TextStyle(fontSize: 22.sp)),
                           SizedBox(width: 8.w),
@@ -273,20 +285,17 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                           color: AppColors.textSecondary,
                           fontWeight: FontWeight.normal,
                         ),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: AppColors.primary, width: 2.w),
-                        ),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: AppColors.primary, width: 2.w),
-                        ),
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
                         isDense: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 8.h),
+                        contentPadding: EdgeInsets.symmetric(vertical: 12.h),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
+          ),
             
             const Spacer(),
             
@@ -300,14 +309,26 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
             
             // Next Button
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.0.w, vertical: 16.0.h),
-              child: SizedBox(
+              padding: EdgeInsets.symmetric(horizontal: 24.0.w, vertical: 24.0.h),
+              child: Container(
                 width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: _rawPhoneNumber.length == _maxLength ? AppColors.brandGradient : null,
+                  color: _rawPhoneNumber.length == _maxLength ? null : AppColors.primary.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(30.r),
+                  boxShadow: _rawPhoneNumber.length == _maxLength ? [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ] : null,
+                ),
                 child: ElevatedButton(
                   onPressed: _rawPhoneNumber.length == _maxLength ? _onNext : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.r),
                     ),
@@ -318,7 +339,8 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     style: TextStyle(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.background,
+                      color: Colors.white,
+                      letterSpacing: 1.0,
                     ),
                   ),
                 ),

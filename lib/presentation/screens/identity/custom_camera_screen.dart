@@ -229,13 +229,13 @@ class _CustomCameraScreenState extends State<CustomCameraScreen> {
   Widget build(BuildContext context) {
     if (!_isCameraInitialized || _controller == null) {
       return const Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       body: Stack(
         fit: StackFit.expand,
         children: [

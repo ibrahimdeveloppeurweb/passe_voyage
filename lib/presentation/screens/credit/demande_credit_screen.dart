@@ -124,6 +124,141 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
     }
   }
 
+  Widget _buildModalRow(String label, String value, {bool isTotal = false}) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: isTotal ? AppColors.textPrimary : Colors.grey.shade600,
+              fontSize: isTotal ? 16.sp : 14.sp,
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: isTotal ? AppColors.primary : AppColors.textPrimary,
+              fontSize: isTotal ? 18.sp : 14.sp,
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConfirmationModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20.h,
+            top: 24.h,
+            left: 24.w,
+            right: 24.w,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Confirmer la demande',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: Colors.grey),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              
+              _buildModalRow('Trajet', '$_departureCity - $_arrivalCity'),
+              _buildModalRow('Compagnie', _selectedCompany!),
+              _buildModalRow('Date', DateFormat('d MMM yyyy', 'fr_FR').format(_selectedDate!)),
+              _buildModalRow('Passagers', '${_passengerCount * (_isRoundTrip ? 2 : 1)} Billet${(_passengerCount * (_isRoundTrip ? 2 : 1)) > 1 ? 's' : ''}'),
+              
+              SizedBox(height: 16.h),
+              Divider(color: Colors.grey.shade200),
+              SizedBox(height: 16.h),
+              
+              _buildModalRow('Crédit Transport', '${NumberFormat('#,###', 'fr_FR').format(_estimatedPrice)} FCFA'),
+              _buildModalRow('Frais de service', '${NumberFormat('#,###', 'fr_FR').format(_serviceFee)} FCFA'),
+              
+              SizedBox(height: 8.h),
+              _buildModalRow(
+                'Total', 
+                '${NumberFormat('#,###', 'fr_FR').format(_estimatedPrice! + _serviceFee)} FCFA',
+                isTotal: true,
+              ),
+              
+              SizedBox(height: 32.h),
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: AppColors.brandGradient,
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Fermer la modale
+                    Navigator.pushNamed(context, AppRoutes.dashboard, arguments: {
+                      'company': _selectedCompany,
+                      'departure': _departureCity,
+                      'arrival': _arrivalCity,
+                      'date': _selectedDate,
+                      'returnDate': _returnDate,
+                      'isRoundTrip': _isRoundTrip,
+                      'passengers': _passengerCount,
+                      'pricePerTicket': 5000,
+                      'totalPrice': _estimatedPrice,
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                  ),
+                  child: Text(
+                    'Confirmer', 
+                    style: TextStyle(fontSize: 16.sp, color: Colors.white, fontWeight: FontWeight.bold)
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _proceedToSummary() {
     if (_selectedCompany == null || _departureCity == null || _arrivalCity == null || _selectedDate == null || (_isRoundTrip && _returnDate == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -145,36 +280,35 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
       return;
     }
 
-    Navigator.pushNamed(context, AppRoutes.dashboard, arguments: {
-      'company': _selectedCompany,
-      'departure': _departureCity,
-      'arrival': _arrivalCity,
-      'date': _selectedDate,
-      'returnDate': _returnDate,
-      'isRoundTrip': _isRoundTrip,
-      'passengers': _passengerCount,
-      'pricePerTicket': 5000,
-      'totalPrice': _estimatedPrice,
-    });
+    _showConfirmationModal(context);
   }
 
   Widget _buildPartnerCard(String name) {
     final bool isSelected = _selectedCompany == name;
     return GestureDetector(
       onTap: () => setState(() => _selectedCompany = name),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
         margin: EdgeInsets.only(right: 12.w, bottom: 4.h, top: 4.h),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.white,
+          gradient: isSelected ? AppColors.brandGradient : null,
+          color: isSelected ? null : Colors.white,
           borderRadius: BorderRadius.circular(24.r),
-          border: Border.all(color: isSelected ? AppColors.primary : Colors.grey[200]!),
+          border: Border.all(color: isSelected ? Colors.transparent : Colors.grey[300]!),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
+            if (isSelected)
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              )
+            else
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
           ],
         ),
         child: Row(
@@ -182,7 +316,7 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
           children: [
             Icon(Icons.directions_bus, color: isSelected ? Colors.white : AppColors.primary, size: 16.w),
             SizedBox(width: 8.w),
-            Text(name, style: TextStyle(fontWeight: FontWeight.w600, color: isSelected ? Colors.white : AppColors.primary, fontSize: 13.sp)),
+            Text(name, style: TextStyle(fontWeight: FontWeight.w700, color: isSelected ? Colors.white : AppColors.textPrimary, fontSize: 13.sp)),
           ],
         ),
       ),
@@ -192,10 +326,10 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('Demande de Crédit Voyage'),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         foregroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
@@ -203,8 +337,9 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(24.0.w),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(24.0.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -455,29 +590,48 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
             if (_estimatedPrice != null) ...[
               SizedBox(height: 24.h),
               Container(
-                padding: EdgeInsets.all(16.w),
+                padding: EdgeInsets.all(20.w),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.05),
+                  gradient: LinearGradient(
+                    colors: [Colors.white, AppColors.surface],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Crédit demandé (Transport)', style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
+                        Text('Crédit Transport', style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
                         Text('${NumberFormat('#,###', 'fr_FR').format(_estimatedPrice)} FCFA', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15.sp)),
                       ],
                     ),
                     SizedBox(height: 12.h),
-                    Divider(color: AppColors.primary.withOpacity(0.1), height: 1),
-                    SizedBox(height: 12.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Frais de service (À payer)', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 16.sp)),
-                        Text('${NumberFormat('#,###', 'fr_FR').format(_serviceFee)} FCFA', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 18.sp)),
+                        Text('Frais de service', style: TextStyle(color: AppColors.textSecondary, fontSize: 14.sp)),
+                        Text('${NumberFormat('#,###', 'fr_FR').format(_serviceFee)} FCFA', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15.sp)),
+                      ],
+                    ),
+                    SizedBox(height: 16.h),
+                    Divider(color: AppColors.primary.withOpacity(0.1), height: 1),
+                    SizedBox(height: 16.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Montant Total', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 16.sp)),
+                        Text('${NumberFormat('#,###', 'fr_FR').format(_estimatedPrice! + _serviceFee)} FCFA', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 20.sp)),
                       ],
                     ),
                   ],
@@ -485,25 +639,39 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
               ),
             ],
             
-            SizedBox(height: 24.h),
+            SizedBox(height: 32.h),
             
-            SizedBox(
+            Container(
               width: double.infinity,
-              height: 55.h,
+              decoration: BoxDecoration(
+                gradient: AppColors.brandGradient,
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: ElevatedButton(
                 onPressed: _proceedToSummary,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                 ),
                 child: Text(
-                  'Faire la demande de crédit', 
-                  style: TextStyle(fontSize: 18.sp, color: Colors.white, fontWeight: FontWeight.bold)
+                  'CONFIRMER LA DEMANDE', 
+                  style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.0)
                 ),
               ),
             ),
+            SizedBox(height: 24.h),
           ],
         ),
+      ),
       ),
     );
   }

@@ -50,24 +50,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             
             // Profile Header Card
             Container(
-              padding: EdgeInsets.all(16.w),
+              padding: EdgeInsets.all(20.w),
               decoration: BoxDecoration(
-                color: Colors.white,
+                gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.circular(24.r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.blueGrey.shade100,
-                    child: Icon(Icons.person, color: AppColors.primary, size: 32.w),
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+                    ),
+                    child: CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                      child: Icon(Icons.person, color: Colors.white, size: 36.w),
+                    ),
                   ),
                   SizedBox(width: 16.w),
                   Expanded(
@@ -77,34 +83,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Text(
                           'Ibrahim Cisse',
                           style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 20.sp,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
                         SizedBox(height: 4.h),
                         Text(
                           '05 55 56 84 05',
                           style: TextStyle(
-                            color: Colors.black54,
+                            color: Colors.white.withOpacity(0.8),
                             fontSize: 15.sp,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 1.0,
                           ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                    padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Row(
                       children: [
-                        Text('Mon profil', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black87)),
+                        Text('Mon profil', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white)),
                         SizedBox(width: 4.w),
-                        Icon(Icons.chevron_right, size: 18.w, color: Colors.black87),
+                        Icon(Icons.chevron_right, size: 18.w, color: Colors.white),
                       ],
                     ),
                   )

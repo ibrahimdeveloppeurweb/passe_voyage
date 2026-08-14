@@ -61,18 +61,22 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
             
             // Lock Icon
             Container(
-              padding: EdgeInsets.all(12.w),
+              padding: EdgeInsets.all(20.w),
               decoration: BoxDecoration(
+                color: Colors.white,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.primary, // Dark blue from screenshot
-                  width: 3.w,
-                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Icon(
-                Icons.lock,
+                Icons.lock_rounded,
                 color: AppColors.primary,
-                size: 28.w,
+                size: 32.w,
               ),
             ),
             
@@ -100,13 +104,22 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(4, (index) {
                 final isFilled = index < _pinCode.length;
-                return Container(
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   margin: EdgeInsets.symmetric(horizontal: 12.w),
-                  width: 14.w,
-                  height: 14.h,
+                  width: isFilled ? 18.w : 14.w,
+                  height: isFilled ? 18.h : 14.h,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isFilled ? AppColors.primary : AppColors.primary.withOpacity(0.2), // Light blue for empty, primary for filled
+                    color: isFilled ? null : AppColors.primary.withOpacity(0.15),
+                    gradient: isFilled ? AppColors.brandGradient : null,
+                    boxShadow: isFilled ? [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ] : null,
                   ),
                 );
               }),

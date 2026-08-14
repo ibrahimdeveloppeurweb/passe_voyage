@@ -83,86 +83,96 @@ class DashboardScreen extends StatelessWidget {
                 
                 SliverToBoxAdapter(child: SizedBox(height: 24.h)),
 
-                // Solde
+                // Solde Premium Card
                 SliverToBoxAdapter(
-                  child: Column(
-                    children: [
-                      Text(
-                        'CRÉDIT VOYAGE',
-                        style: TextStyle(
-                          color: Color(0xFF6B7280), // Gris foncé
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            '160.000',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 42.sp,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -1.5,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 8.0.h),
-                            child: Text(
-                              'F',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 24.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Padding(
-                            padding: EdgeInsets.only(top: 8.0.h),
-                            child: Icon(Icons.visibility_off, color: AppColors.primary, size: 20.w),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Container(
+                      padding: EdgeInsets.all(24.w),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(24.r),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                
-                SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-                
-                // Bouton Scanner un code
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.0.w),
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context, 
-                          AppRoutes.remboursement,
-                          arguments: {'amount': 160000},
-                        );
-                      },
-                      icon: Icon(Icons.payment, color: AppColors.background),
-                      label: Text(
-                        'REMBOURSER MON CRÉDIT',
-                        style: TextStyle(
-                          color: AppColors.background,
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary, // Utilisation stricte de la couleur primaire
-                        padding: EdgeInsets.symmetric(vertical: 20.h), // Taller button
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                        elevation: 0,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'CRÉDIT VOYAGE DISPONIBLE',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+
+                            ],
+                          ),
+                          SizedBox(height: 12.h),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                '160.000',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 42.sp,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -1.0,
+                                ),
+                              ),
+                              SizedBox(width: 4.w),
+                              Text(
+                                'XOF',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 20.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 24.h),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pushNamed(
+                                context, 
+                                AppRoutes.remboursement,
+                                arguments: {'amount': 160000},
+                              );
+                            },
+                            icon: Icon(Icons.payment, color: AppColors.primary),
+                            label: Text(
+                              'REMBOURSER MON CRÉDIT',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: AppColors.primary,
+                              minimumSize: Size(double.infinity, 50.h),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                              elevation: 0,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -177,15 +187,7 @@ class DashboardScreen extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 20.h),
                       decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(16.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.01),
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        color: Colors.transparent,
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -232,15 +234,7 @@ class DashboardScreen extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 8.h),
                       decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(16.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.01),
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        color: Colors.transparent,
                       ),
                       child: Column(
                         children: [
@@ -278,17 +272,25 @@ class DashboardScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: EdgeInsets.all(20.w),
+            width: 64.w,
+            height: 64.w,
             decoration: BoxDecoration(
               color: bgColor,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(20.r),
+              boxShadow: [
+                BoxShadow(
+                  color: iconColor.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: Icon(icon, color: iconColor, size: 24.w),
+            child: Icon(icon, color: iconColor, size: 28.w),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 12.h),
           Text(
             title,
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11.sp),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11.sp, color: AppColors.textPrimary),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -299,25 +301,36 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildTransactionItem(String title, String subtitle, String amount, [IconData icon = Icons.shopping_cart]) {
+    final bool isPositive = amount.startsWith('+');
+    final Color amountColor = isPositive ? AppColors.success : AppColors.textPrimary;
+    
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0.w, vertical: 14.0.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.0.w, vertical: 16.0.h),
       child: Row(
         children: [
-          Icon(icon, color: Colors.blueGrey[200], size: 20.w),
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 20.w),
+          ),
           SizedBox(width: 16.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(title, style: TextStyle(color: AppColors.primary, fontSize: 13.sp, fontWeight: FontWeight.w600)),
-                Text(subtitle, style: TextStyle(color: AppColors.textSecondary, fontSize: 11.sp)),
+                Text(title, style: TextStyle(color: AppColors.textPrimary, fontSize: 14.sp, fontWeight: FontWeight.w800)),
+                SizedBox(height: 4.h),
+                Text(subtitle, style: TextStyle(color: Colors.grey[600], fontSize: 11.sp, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
           Text(
             amount,
-            style: TextStyle(color: AppColors.primary, fontSize: 13.sp, fontWeight: FontWeight.w600),
+            style: TextStyle(color: amountColor, fontSize: 14.sp, fontWeight: FontWeight.w900),
           ),
         ],
       ),

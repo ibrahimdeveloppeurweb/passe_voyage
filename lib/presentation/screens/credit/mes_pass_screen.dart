@@ -184,13 +184,13 @@ class MesPassScreen extends StatelessWidget {
     Color statusBgColor;
     if (ticketStatus == 'Valide') {
       statusColor = AppColors.success;
-      statusBgColor = AppColors.success.withOpacity(0.1);
+      statusBgColor = AppColors.success.withOpacity(0.15);
     } else if (ticketStatus == 'Utilisé') {
       statusColor = Colors.grey[600]!;
       statusBgColor = Colors.grey[200]!;
     } else {
       statusColor = Colors.orange;
-      statusBgColor = Colors.orange.withOpacity(0.1);
+      statusBgColor = Colors.orange.withOpacity(0.15);
     }
 
     Color refundColor;
@@ -205,144 +205,184 @@ class MesPassScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () => _showTicketModal(context, compagnie, trajet, date, prix, ticketStatus, numberOfTickets),
       child: Container(
-        margin: EdgeInsets.only(bottom: 16.h),
-        padding: EdgeInsets.all(16.w),
+        margin: EdgeInsets.only(bottom: 20.h),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(20.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
-          border: Border.all(color: Colors.grey[100]!),
         ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(
-                        color: AppColors.tertiary.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      child: Icon(Icons.directions_bus, color: AppColors.tertiary, size: 20.w),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20.r),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(color: statusColor, width: 6.w),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(20.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            compagnie,
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(12.w),
+                                  decoration: BoxDecoration(
+                                    gradient: AppColors.primaryGradient,
+                                    borderRadius: BorderRadius.circular(14.r),
+                                  ),
+                                  child: Icon(Icons.directions_bus, color: Colors.white, size: 24.w),
+                                ),
+                                SizedBox(width: 16.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        compagnie,
+                                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18.sp, color: AppColors.textPrimary),
+                                      ),
+                                      SizedBox(height: 4.h),
+                                      Text(
+                                        trajet,
+                                        style: TextStyle(color: Colors.grey[600], fontSize: 13.sp, fontWeight: FontWeight.w500),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          Text(
-                            trajet,
-                            style: TextStyle(color: Colors.grey, fontSize: 13.sp),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                            decoration: BoxDecoration(
+                              color: statusBgColor,
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: Text(
+                              ticketStatus,
+                              style: TextStyle(
+                                color: statusColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11.sp,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: statusBgColor,
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Text(
-                  ticketStatus,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12.sp,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Icon(
-                refundStatus == 'Remboursé' 
-                    ? Icons.check_circle 
-                    : (refundStatus == 'Partiellement remboursé' ? Icons.timelapse : Icons.error),
-                size: 16.w,
-                color: refundColor,
-              ),
-              SizedBox(width: 6.w),
-              Text(
-                'Remboursement : $refundStatus',
-                style: TextStyle(
-                  color: refundColor,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          Divider(height: 1.h),
-          SizedBox(height: 16.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Date de départ', style: TextStyle(color: Colors.grey, fontSize: 12.sp)),
-                  SizedBox(height: 4.h),
-                  Row(
-                    children: [
-                      Text(date, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
-                      if (numberOfTickets > 1) ...[
-                        SizedBox(width: 8.w),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4.r),
+                      SizedBox(height: 16.h),
+                      Row(
+                        children: [
+                          Icon(
+                            refundStatus == 'Remboursé' 
+                                ? Icons.check_circle 
+                                : (refundStatus == 'Partiellement remboursé' ? Icons.timelapse : Icons.error),
+                            size: 16.w,
+                            color: refundColor,
                           ),
-                          child: Text(
-                            '$numberOfTickets billets',
-                            style: TextStyle(color: AppColors.primary, fontSize: 10.sp, fontWeight: FontWeight.bold),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'Remboursement : $refundStatus',
+                            style: TextStyle(
+                              color: refundColor,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('Prix total', style: TextStyle(color: Colors.grey, fontSize: 12.sp)),
-                  SizedBox(height: 4.h),
-                  Text(
-                    '$prix F',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp, color: AppColors.primary),
+                ),
+                // Ticket divider line
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Row(
+                    children: List.generate(
+                      40,
+                      (index) => Expanded(
+                        child: Container(
+                          height: 1.5.h,
+                          color: index.isEven ? Colors.grey[300] : Colors.transparent,
+                        ),
+                      ),
+                    ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                Container(
+                  padding: EdgeInsets.all(20.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(20.r),
+                      bottomRight: Radius.circular(20.r),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Date de départ', style: TextStyle(color: Colors.grey[600], fontSize: 11.sp, fontWeight: FontWeight.w500)),
+                          SizedBox(height: 6.h),
+                          Row(
+                            children: [
+                              Text(date, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.sp, color: AppColors.textPrimary)),
+                              if (numberOfTickets > 1) ...[
+                                SizedBox(width: 8.w),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6.r),
+                                  ),
+                                  child: Text(
+                                    '$numberOfTickets billets',
+                                    style: TextStyle(color: AppColors.primary, fontSize: 11.sp, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('Prix total', style: TextStyle(color: Colors.grey[600], fontSize: 11.sp, fontWeight: FontWeight.w500)),
+                          SizedBox(height: 6.h),
+                          Text(
+                            '$prix F',
+                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16.sp, color: AppColors.primary),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -350,9 +390,9 @@ class MesPassScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
         title: Text(

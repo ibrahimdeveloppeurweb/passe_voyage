@@ -27,22 +27,28 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(vertical: 16.h),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(
-                  color: _selectedGender == 'Homme' ? AppColors.primary : Colors.grey[300]!,
-                  width: _selectedGender == 'Homme' ? 2 : 1,
-                ),
+                color: _selectedGender == 'Homme' ? null : Colors.white,
+                gradient: _selectedGender == 'Homme' ? AppColors.brandGradient : null,
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: _selectedGender == 'Homme' 
+                        ? AppColors.primary.withOpacity(0.3)
+                        : Colors.black.withOpacity(0.04),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.person, color: _selectedGender == 'Homme' ? AppColors.primary : Colors.blueGrey),
+                  Icon(Icons.person, color: _selectedGender == 'Homme' ? Colors.white : AppColors.primary),
                   SizedBox(width: 8.w),
                   Text(
                     'Un Homme',
                     style: TextStyle(
-                      color: _selectedGender == 'Homme' ? AppColors.primary : Colors.blueGrey,
+                      color: _selectedGender == 'Homme' ? Colors.white : AppColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -58,22 +64,28 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             child: Container(
               padding: EdgeInsets.symmetric(vertical: 16.h),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(
-                  color: _selectedGender == 'Femme' ? AppColors.primary : Colors.grey[300]!,
-                  width: _selectedGender == 'Femme' ? 2 : 1,
-                ),
+                color: _selectedGender == 'Femme' ? null : Colors.white,
+                gradient: _selectedGender == 'Femme' ? AppColors.brandGradient : null,
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: _selectedGender == 'Femme' 
+                        ? AppColors.primary.withOpacity(0.3)
+                        : Colors.black.withOpacity(0.04),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.person_3, color: _selectedGender == 'Femme' ? AppColors.primary : Colors.blueGrey),
+                  Icon(Icons.person_3, color: _selectedGender == 'Femme' ? Colors.white : AppColors.primary),
                   SizedBox(width: 8.w),
                   Text(
                     'Une Femme',
                     style: TextStyle(
-                      color: _selectedGender == 'Femme' ? AppColors.primary : Colors.blueGrey,
+                      color: _selectedGender == 'Femme' ? Colors.white : AppColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -97,30 +109,39 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextFormField(
-          controller: controller,
-          readOnly: readOnly,
-          onTap: onTap,
-          decoration: InputDecoration(
-            hintText: label,
-            hintStyle: TextStyle(color: Colors.blueGrey[300], fontSize: 16.sp),
-            suffixIcon: suffixIcon,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(color: AppColors.primary, width: 2.w),
-            ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Ce champ est requis';
-            }
-            return null;
-          },
+          child: TextFormField(
+            controller: controller,
+            readOnly: readOnly,
+            onTap: onTap,
+            style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              hintText: label,
+              hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14.sp, fontWeight: FontWeight.normal),
+              suffixIcon: suffixIcon,
+              contentPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Ce champ est requis';
+              }
+              return null;
+            },
+          ),
         ),
         SizedBox(height: 8.h),
         Text(
@@ -135,9 +156,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: AppColors.primary),
@@ -204,8 +225,19 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               ),
               Padding(
                 padding: EdgeInsets.all(24.0.w),
-                child: SizedBox(
+                child: Container(
                   width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.brandGradient,
+                    borderRadius: BorderRadius.circular(30.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
                   child: ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate() && _selectedGender != null) {
@@ -221,19 +253,20 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
                       padding: EdgeInsets.symmetric(vertical: 18.h),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30.r),
                       ),
-                      elevation: 0,
                     ),
                     child: Text(
                       'Continuer',
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.0,
                       ),
                     ),
                   ),

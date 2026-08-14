@@ -62,15 +62,22 @@ class _OtpValidationScreenState extends State<OtpValidationScreen> {
             
             // Icon Bubble
             Container(
-              padding: EdgeInsets.all(8.w),
+              padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: AppColors.primary, // Purple color from screenshot
-                borderRadius: BorderRadius.circular(8.r),
+                gradient: AppColors.primaryGradient,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Icon(
-                Icons.chat_bubble,
-                color: AppColors.background,
-                size: 24.w,
+                Icons.chat_bubble_rounded,
+                color: Colors.white,
+                size: 28.w,
               ),
             ),
             
@@ -101,34 +108,43 @@ class _OtpValidationScreenState extends State<OtpValidationScreen> {
                 bool isFilled = index < _otpCode.length;
 
                 return Container(
-                  width: 40.w,
-                  margin: EdgeInsets.symmetric(horizontal: 8.w),
+                  width: 50.w,
+                  height: 60.h,
+                  margin: EdgeInsets.symmetric(horizontal: 10.w),
                   decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: isActive ? AppColors.primary : AppColors.textSecondary,
-                        width: isActive ? 2.0 : 1.5,
-                      ),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: isActive ? AppColors.primary : Colors.transparent,
+                      width: isActive ? 2.0 : 0,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isActive 
+                            ? AppColors.primary.withOpacity(0.15)
+                            : Colors.black.withOpacity(0.04),
+                        blurRadius: isActive ? 12 : 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   alignment: Alignment.center,
-                  padding: EdgeInsets.only(bottom: 8.h),
                   child: isFilled
                       ? Text(
                           _otpCode[index],
                           style: TextStyle(
-                            fontSize: 32.sp,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary,
+                            fontSize: 28.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
                           ),
                         )
                       : isActive
                           ? Container(
                               width: 2.w,
-                              height: 32.h,
+                              height: 28.h,
                               color: AppColors.primary,
                             )
-                          : SizedBox(height: 32.h),
+                          : null,
                 );
               }),
             ),

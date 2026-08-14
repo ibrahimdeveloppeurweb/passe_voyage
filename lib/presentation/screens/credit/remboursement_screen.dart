@@ -75,9 +75,9 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
         title: Text(
@@ -124,12 +124,19 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          'XOF',
-                          style: TextStyle(
-                            fontSize: 48.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Text(
+                            'XOF',
+                            style: TextStyle(
+                              fontSize: 24.sp,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
                         SizedBox(width: 16.w),
@@ -139,23 +146,23 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
                             keyboardType: TextInputType.number,
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                             style: TextStyle(
-                              fontSize: 40.sp,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 48.sp,
+                              fontWeight: FontWeight.w900,
                               color: AppColors.textPrimary,
                             ),
                             autofocus: true,
                             decoration: InputDecoration(
                               hintText: '0',
                               hintStyle: TextStyle(
-                                fontSize: 40.sp,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
+                                fontSize: 48.sp,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.grey[300],
                               ),
                               enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey[300]!, width: 2.w),
+                                borderSide: BorderSide(color: Colors.grey[200]!, width: 2.w),
                               ),
                               focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: AppColors.primary, width: 2.w),
+                                borderSide: BorderSide(color: AppColors.primary, width: 3.w),
                               ),
                             ),
                           ),
@@ -164,30 +171,41 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
                     ),
                     SizedBox(height: 32.h),
                     
-
                   ],
                 ),
               ),
             ),
             Padding(
               padding: EdgeInsets.all(24.0.w),
-              child: SizedBox(
+              child: Container(
                 width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: AppColors.brandGradient,
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: ElevatedButton(
                   onPressed: _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
                     padding: EdgeInsets.symmetric(vertical: 18.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16.r),
                     ),
-                    elevation: 0,
                   ),
                   child: Text(
-                    'Continuer',
+                    'CONTINUER',
                     style: TextStyle(
-                      fontSize: 18.sp,
+                      fontSize: 15.sp,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
                       color: Colors.white,
                     ),
                   ),

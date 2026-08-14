@@ -85,9 +85,9 @@ class MesRemboursementsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
         title: Text(
@@ -103,7 +103,9 @@ class MesRemboursementsScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Column(
+      body: ListView(
+        padding: EdgeInsets.zero,
+        physics: const BouncingScrollPhysics(),
         children: [
           Container(
             width: double.infinity,
@@ -142,9 +144,10 @@ class MesRemboursementsScreen extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.all(20.w),
+          Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Historique récent',
@@ -155,6 +158,8 @@ class MesRemboursementsScreen extends StatelessWidget {
                 _buildRefundCard('Remboursement', '10 Jan', 'Carte Bancaire', 10000, true),
                 _buildRefundCard('Remboursement', '05 Jan', 'Mobile Money', 5000, false),
                 _buildRefundCard('Remboursement', '02 Jan', 'Mobile Money', 20000, true),
+                _buildRefundCard('Remboursement', '02 Jan', 'Mobile Money', 20000, true),
+                
               ],
             ),
           ),
