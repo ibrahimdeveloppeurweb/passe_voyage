@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../presentation/screens/auth/phone_entry_screen.dart';
 import '../presentation/screens/auth/otp_validation_screen.dart';
 import '../presentation/screens/auth/pin_entry_screen.dart';
+import '../presentation/screens/auth/login_screen.dart';
 import '../presentation/screens/auth/personal_info_screen.dart';
 import '../presentation/screens/credit/demande_credit_screen.dart';
 import '../presentation/screens/credit/remboursement_screen.dart';
@@ -19,9 +20,16 @@ import '../presentation/screens/profile/profile_screen.dart';
 import '../presentation/screens/profile/settings_screen.dart';
 
 class AppRoutes {
+  // API Configuration
+  // static const String apiBaseUrl = 'https://passvoyage.net';
+  static const String apiBaseUrl = 'http://10.0.2.2:8000';
+  static const String baseUrl = '$apiBaseUrl/api';
+
+  
   static const String phoneEntry = '/phone_entry';
   static const String otpValidation = '/otp_validation';
   static const String pinEntry = '/pin_entry';
+  static const String login = '/login';
   static const String dashboard = '/dashboard';
   static const String notifications = '/notifications';
   static const String demandeCredit = '/demande_credit';
@@ -46,11 +54,18 @@ class AppRoutes {
       case otpValidation:
         final args = settings.arguments as Map<String, dynamic>?;
         final phoneNumber = args?['phoneNumber'] ?? '';
-        return MaterialPageRoute(builder: (_) => OtpValidationScreen(phoneNumber: phoneNumber));
+        final countryCode = args?['countryCode'] ?? '+225';
+        return MaterialPageRoute(builder: (_) => OtpValidationScreen(phoneNumber: phoneNumber, countryCode: countryCode));
       case pinEntry:
         final args = settings.arguments as Map<String, dynamic>?;
         final phoneNumber = args?['phoneNumber'] ?? '';
-        return MaterialPageRoute(builder: (_) => PinEntryScreen(phoneNumber: phoneNumber));
+        final countryCode = args?['countryCode'] ?? '+225';
+        return MaterialPageRoute(builder: (_) => PinEntryScreen(phoneNumber: phoneNumber, countryCode: countryCode));
+      case login:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final phoneNumber = args?['phoneNumber'] ?? '';
+        final countryCode = args?['countryCode'] ?? '+225';
+        return MaterialPageRoute(builder: (_) => LoginScreen(phoneNumber: phoneNumber, countryCode: countryCode));
       case dashboard:
         return PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) => const DashboardScreen(),

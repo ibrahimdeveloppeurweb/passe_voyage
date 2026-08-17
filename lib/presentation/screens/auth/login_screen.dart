@@ -3,89 +3,89 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../widgets/custom_numpad.dart';
 import '../../../config/routes.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/services/auth_service.dart';
 
-class PinEntryScreen extends StatefulWidget {
+class LoginScreen extends StatefulWidget {
   final String phoneNumber;
   final String countryCode;
 
-  const PinEntryScreen({
+  const LoginScreen({
     Key? key,
     required this.phoneNumber,
     this.countryCode = '+225',
   }) : super(key: key);
 
   @override
-  State<PinEntryScreen> createState() => _PinEntryScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _PinEntryScreenState extends State<PinEntryScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   String _pinCode = '';
-  String _firstPinCode = '';
-  bool _isConfirming = false;
+  bool _isLoading = false;
 
-  void _onKeyPressed(String value) {
-    if (_pinCode.length < 4) {
+  Future<void> _onKeyPressed(String value) async {
+    if (_pinCode.length < 4 && !_isLoading) {
       setState(() {
         _pinCode += value;
       });
 
       if (_pinCode.length == 4) {
-        if (!_isConfirming) {
-          // Étape 1 terminée -> Passage à l'Étape 2 (Confirmation)
-          setState(() {
-            _firstPinCode = _pinCode;
-            _pinCode = '';
-            _isConfirming = true;
-          });
-        } else {
-          // Étape 2 terminée -> Vérification de la confirmation
-          if (_pinCode == _firstPinCode) {
-            Future.delayed(const Duration(milliseconds: 200), () {
-              if (mounted) {
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.personalInfo,
-                  arguments: {
-                    'phoneNumber': widget.phoneNumber,
-                    'pinCode': _pinCode,
-                    'countryCode': widget.countryCode,
-                  },
-                );
-              }
-            });
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Les codes secrets ne correspondent pas. Veuillez réessayer.'),
-                backgroundColor: Colors.redAccent,
-                duration: Duration(seconds: 2),
-              ),
-            );
-            setState(() {
-              _pinCode = '';
-              _firstPinCode = '';
-              _isConfirming = false;
-            });
-          }
+        await _handleLogin();
+      }
+    }
+  }
+
+  Future<void> _handleLogin() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final result = await AuthService.loginPassenger(
+      phone: widget.phoneNumber,
+      pinCode: _pinCode,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (result['success'] == true) {
+        if (result['offline'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Mode hors-ligne : Données locales chargées.'),
+              backgroundColor: Colors.orangeAccent,
+              duration: Duration(seconds: 2),
+            ),
+          );
         }
+
+        // Redirection directe vers le Dashboard
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.dashboard,
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Code secret PIN incorrect'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+        setState(() {
+          _pinCode = '';
+        });
       }
     }
   }
 
   void _onDelete() {
-    if (_pinCode.isNotEmpty) {
+    if (_pinCode.isNotEmpty && !_isLoading) {
       setState(() {
         _pinCode = _pinCode.substring(0, _pinCode.length - 1);
       });
-    }
-  }
-
-  String _getTitleText() {
-    final phoneDisplay = widget.phoneNumber.isNotEmpty ? widget.phoneNumber : '08 87 99 80 23';
-    if (_isConfirming) {
-      return 'Confirmez votre code secret pour le\ncompte $phoneDisplay';
-    } else {
-      return 'Entrez votre code secret pour le\ncompte $phoneDisplay';
     }
   }
 
@@ -99,13 +99,7 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () {
-            if (_isConfirming) {
-              setState(() {
-                _isConfirming = false;
-                _pinCode = '';
-                _firstPinCode = '';
-              });
-            } else if (Navigator.canPop(context)) {
+            if (Navigator.canPop(context)) {
               Navigator.pop(context);
             } else {
               Navigator.pushReplacementNamed(context, AppRoutes.phoneEntry);
@@ -118,47 +112,46 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
           children: [
             SizedBox(height: 10.h),
 
-            // Icône Cadenas circulaire pour la création de compte
-            Container(
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Icon(
-                Icons.lock_rounded,
-                color: const Color(0xFF0D253F), // Bleu Cadenas Sombre
-                size: 32.w,
+            // Logo applicatif (assets/images/logo.png)
+            Center(
+              child: Image.asset(
+                'assets/images/logo.png',
+                height: 90.h,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 80.h,
+                    width: 80.w,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.lock_rounded, color: Colors.white, size: 40),
+                  );
+                },
               ),
             ),
 
-            SizedBox(height: 30.h),
+            SizedBox(height: 35.h),
 
-            // Libellé (Entrez votre code / Confirmez votre code)
+            // Libellé officiel de déverrouillage
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 32.0.w),
               child: Text(
-                _getTitleText(),
+                'Votre code secret est requis pour déverrouiller',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textPrimary,
-                  height: 1.3.h,
+                  height: 1.4.h,
                 ),
               ),
             ),
 
             const Spacer(),
 
-            // Pastilles / Dots PIN avec dégradé AppColors.brandGradient (Bleu à Vert pour la création)
+            // Pastilles / Dots PIN avec dégradé AppColors.brandGradient (Bleu à Vert)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(4, (index) {
@@ -185,6 +178,18 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
                 );
               }),
             ),
+
+            if (_isLoading) ...[
+              SizedBox(height: 20.h),
+              SizedBox(
+                height: 24.h,
+                width: 24.w,
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 2.5,
+                ),
+              ),
+            ],
 
             const Spacer(),
 

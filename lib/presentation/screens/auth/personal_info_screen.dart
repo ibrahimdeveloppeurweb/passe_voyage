@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../config/routes.dart';
+import '../../../core/services/auth_service.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({Key? key}) : super(key: key);
@@ -17,6 +18,75 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   final TextEditingController _residenceController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+
+  Future<void> _submitForm(String phoneNumber, String pinCode, String countryCode) async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_selectedGender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez sélectionner si vous êtes un Homme ou une Femme')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final result = await AuthService.registerPassenger(
+      phoneNumber: phoneNumber,
+      pinCode: pinCode,
+      firstname: _prenomController.text.trim(),
+      lastname: _nomController.text.trim(),
+      gender: _selectedGender == 'Homme' ? 'M' : 'F',
+      residenceAddress: _residenceController.text.trim(),
+      countryCode: countryCode,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (result['success'] == true) {
+        // Auto-connexion réussie : Token JWT, Profil, Téléphone et PIN stockés localement
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Compte créé et authentifié avec succès !'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.dashboard,
+          (route) => false,
+        );
+      } else {
+        final message = result['message']?.toString() ?? 'Erreur lors de la création du compte';
+        if (message.toLowerCase().contains('déjà') || message.toLowerCase().contains('existe')) {
+          // Compte existant : Redirection immédiate vers l'écran de connexion / déverrouillage PIN
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRoutes.login,
+            (route) => false,
+            arguments: {
+              'phoneNumber': phoneNumber,
+              'countryCode': countryCode,
+            },
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: Colors.redAccent,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
+  }
 
   Widget _buildGenderSelector() {
     return Row(
@@ -32,7 +102,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: _selectedGender == 'Homme' 
+                    color: _selectedGender == 'Homme'
                         ? AppColors.primary.withOpacity(0.3)
                         : Colors.black.withOpacity(0.04),
                     blurRadius: 15,
@@ -69,7 +139,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: _selectedGender == 'Femme' 
+                    color: _selectedGender == 'Femme'
                         ? AppColors.primary.withOpacity(0.3)
                         : Colors.black.withOpacity(0.04),
                     blurRadius: 15,
@@ -136,7 +206,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               focusedBorder: InputBorder.none,
             ),
             validator: (value) {
-              if (value == null || value.isEmpty) {
+              if (value == null || value.trim().isEmpty) {
                 return 'Ce champ est requis';
               }
               return null;
@@ -155,6 +225,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final Map<String, dynamic>? args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final String phoneNumber = args?['phoneNumber']?.toString() ?? '0555568405';
+    final String pinCode = args?['pinCode']?.toString() ?? '1234';
+    final String countryCode = args?['countryCode']?.toString() ?? '+225';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -191,29 +266,22 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                         ),
                       ),
                       SizedBox(height: 32.h),
-                      
+
                       _buildGenderSelector(),
-                      if (_selectedGender == null) ...[
-                        SizedBox(height: 8.h),
-                        Text(
-                          'Veuillez sélectionner votre genre',
-                          style: TextStyle(color: Colors.transparent, fontSize: 12.sp), // Placeholder for spacing or actual error
-                        ),
-                      ],
                       SizedBox(height: 32.h),
-                      
+
                       _buildTextField(
                         controller: _nomController,
                         label: 'Nom de famille',
                         hint: 'Par exemple, Kouadio',
                       ),
-                      
+
                       _buildTextField(
                         controller: _prenomController,
                         label: 'Prénoms',
                         hint: 'Par exemple, Olivia',
                       ),
-                      
+
                       _buildTextField(
                         controller: _residenceController,
                         label: 'Lieu de résidence',
@@ -239,19 +307,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     ],
                   ),
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate() && _selectedGender != null) {
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          AppRoutes.dashboard,
-                          (route) => false,
-                        );
-                      } else if (_selectedGender == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Veuillez sélectionner si vous êtes un Homme ou une Femme')),
-                        );
-                      }
-                    },
+                    onPressed: _isLoading ? null : () => _submitForm(phoneNumber, pinCode, countryCode),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
@@ -260,15 +316,21 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                         borderRadius: BorderRadius.circular(30.r),
                       ),
                     ),
-                    child: Text(
-                      'Continuer',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? SizedBox(
+                            height: 24.h,
+                            width: 24.w,
+                            child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                          )
+                        : Text(
+                            'Continuer',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
                   ),
                 ),
               ),

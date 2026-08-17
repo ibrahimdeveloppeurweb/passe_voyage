@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../widgets/custom_numpad.dart';
 import '../../../config/routes.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/services/auth_service.dart';
+import '../../../core/services/storage_service.dart';
 
 class PhoneEntryScreen extends StatefulWidget {
   const PhoneEntryScreen({Key? key}) : super(key: key);
@@ -21,6 +23,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   int _maxLength = 10;
   String _currentHint = '0X XX XX XX XX';
   String _rawPhoneNumber = '';
+  bool _isLoading = false;
 
   final List<Map<String, dynamic>> _countries = [
     {'name': 'Burkina Faso', 'code': '+226', 'flag': '🇧🇫', 'length': 8, 'hint': 'XX XX XX XX'},
@@ -40,8 +43,30 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final storage = await StorageService.getInstance();
+      
+      // Si l'utilisateur est déjà connecté/authentifié -> Direction directe vers le Dashboard
+      if (storage.isLoggedIn()) {
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+          return;
+        }
+      } 
+      // Sinon s'il a un compte enregistré sur l'appareil -> Écran de verrouillage PIN Login
+      else if (storage.hasSavedAccount()) {
+        final savedPhone = storage.getPhoneNumber() ?? storage.getPassengerData()?['phoneNumber'] ?? '';
+        if (mounted && savedPhone.isNotEmpty) {
+          Navigator.pushReplacementNamed(
+            context,
+            AppRoutes.login,
+            arguments: {
+              'phoneNumber': savedPhone,
+            },
+          );
+          return;
+        }
+      }
     });
   }
 
@@ -84,15 +109,15 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
       setState(() {
         int cursorPosition = _controller.selection.baseOffset;
         if (cursorPosition == -1) cursorPosition = _controller.text.length;
-        
+
         String textBeforeCursor = _controller.text.substring(0, cursorPosition);
         int digitCursorPos = textBeforeCursor.replaceAll(' ', '').length;
-        
+
         _rawPhoneNumber = _rawPhoneNumber.substring(0, digitCursorPos) + value + _rawPhoneNumber.substring(digitCursorPos);
-        
+
         String newText = _formatPhoneNumber(_rawPhoneNumber);
         int newCursorPosition = _getCursorPositionInFormatted(newText, digitCursorPos + 1);
-        
+
         _controller.text = newText;
         _controller.selection = TextSelection.collapsed(offset: newCursorPosition);
       });
@@ -103,39 +128,152 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
     setState(() {
       int cursorPosition = _controller.selection.baseOffset;
       if (cursorPosition == -1) cursorPosition = _controller.text.length;
-      
+
       if (cursorPosition == 0) return;
-      
-      // If we are about to delete a space, jump back to delete the digit before it
+
       if (_controller.text[cursorPosition - 1] == ' ') {
         cursorPosition--;
       }
       if (cursorPosition == 0) return;
-      
+
       String textBeforeCursor = _controller.text.substring(0, cursorPosition);
       int digitCursorPos = textBeforeCursor.replaceAll(' ', '').length;
-      
+
       if (digitCursorPos > 0) {
         _rawPhoneNumber = _rawPhoneNumber.substring(0, digitCursorPos - 1) + _rawPhoneNumber.substring(digitCursorPos);
-        
+
         String newText = _formatPhoneNumber(_rawPhoneNumber);
         int newCursorPosition = _getCursorPositionInFormatted(newText, digitCursorPos - 1);
-        
+
         _controller.text = newText;
         _controller.selection = TextSelection.collapsed(offset: newCursorPosition);
       }
     });
   }
 
-  void _onNext() {
-    // Check if entered length matches expected length for selected country
-    if (_rawPhoneNumber.length == _maxLength) {
-      Navigator.pushNamed(
-        context,
-        AppRoutes.otpValidation,
-        arguments: {'phoneNumber': _controller.text},
-      );
+  Future<void> _onNext() async {
+    if (_rawPhoneNumber.length != _maxLength || _isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final fullPhone = '$_selectedCode$_rawPhoneNumber';
+    final result = await AuthService.sendOtp(_rawPhoneNumber, _selectedCode);
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success'] == true) {
+      if (result['accountExists'] == true) {
+        // Le numéro possède déjà un compte passager -> Redirection directe et silencieuse vers LoginScreen
+        if (mounted) {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.login,
+            arguments: {
+              'phoneNumber': fullPhone,
+              'countryCode': _selectedCode,
+            },
+          );
+        }
+      } else {
+        // Nouveau numéro -> Processus normal de création
+        final String? otpCode = result['otpCode']?.toString();
+        if (mounted) {
+          await _showOtpDevModal(otpCode ?? '1234');
+        }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Erreur lors de l\'envoi OTP'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
+  }
+
+  Future<void> _showOtpDevModal(String otpCode) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+          title: Row(
+            children: [
+              Icon(Icons.sms_rounded, color: AppColors.primary, size: 28.w),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text(
+                  'Code SMS (Mode Dev)',
+                  style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'En mode démonstration sans SMS externe, voici votre code OTP :',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
+              ),
+              SizedBox(height: 16.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: AppColors.primary, width: 1.5),
+                ),
+                child: Text(
+                  otpCode,
+                  style: TextStyle(
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 8.0,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Fermer le modal
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.otpValidation,
+                  arguments: {
+                    'phoneNumber': _rawPhoneNumber,
+                    'countryCode': _selectedCode,
+                    'formattedPhone': _controller.text,
+                    'otpCode': otpCode,
+                  },
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+              ),
+              child: Text(
+                'Saisir le code',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15.sp),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showCountryDialog() {
@@ -157,7 +295,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
               itemBuilder: (context, index) {
                 final country = _countries[index];
                 final isSelected = _selectedCode == country['code'] && _selectedFlag == country['flag'];
-                
+
                 return InkWell(
                   onTap: () {
                     setState(() {
@@ -165,8 +303,8 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                       _selectedCode = country['code']!;
                       _maxLength = country['length']!;
                       _currentHint = country['hint']!;
-                      _rawPhoneNumber = ''; // Reset raw input
-                      _controller.clear(); // Reset text input when country changes
+                      _rawPhoneNumber = '';
+                      _controller.clear();
                     });
                     Navigator.pop(context);
                   },
@@ -210,11 +348,10 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
         child: Column(
           children: [
             SizedBox(height: 40.h),
-            // Title
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.0.w),
               child: Text(
-                'Bienvenue chez Passe Voyage ! Pour commencer, entrez votre numéro mobile',
+                'Bienvenue chez Pass Voyage ! Pour commencer, entrez votre numéro mobile',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 20.sp,
@@ -224,7 +361,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
               ),
             ),
             const Spacer(),
-            
+
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.0.w),
               child: Container(
@@ -242,81 +379,77 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                 ),
                 child: Row(
                   children: [
-                    // Country Code Selection
                     GestureDetector(
                       onTap: _showCountryDialog,
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
                         color: Colors.transparent,
                         child: Row(
-                        children: [
-                          Text(_selectedFlag, style: TextStyle(fontSize: 22.sp)),
-                          SizedBox(width: 8.w),
-                          Text(
-                            _selectedCode,
-                            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w500),
-                          ),
-                          Icon(Icons.keyboard_arrow_down, size: 20.w),
-                        ],
+                          children: [
+                            Text(_selectedFlag, style: TextStyle(fontSize: 22.sp)),
+                            SizedBox(width: 8.w),
+                            Text(
+                              _selectedCode,
+                              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w500),
+                            ),
+                            Icon(Icons.keyboard_arrow_down, size: 20.w),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 8.w),
-                  // Phone Number TextField
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      readOnly: true, // Prevents system keyboard
-                      showCursor: true, // Forces cursor to blink
-                      cursorColor: AppColors.textPrimary,
-                      cursorWidth: 2.0,
-                      style: TextStyle(
-                        fontSize: 22.sp,
-                        letterSpacing: 2.0,
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: _currentHint,
-                        hintStyle: TextStyle(
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        readOnly: true,
+                        showCursor: true,
+                        cursorColor: AppColors.textPrimary,
+                        cursorWidth: 2.0,
+                        style: TextStyle(
                           fontSize: 22.sp,
                           letterSpacing: 2.0,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.normal,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w500,
                         ),
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+                        decoration: InputDecoration(
+                          hintText: _currentHint,
+                          hintStyle: TextStyle(
+                            fontSize: 22.sp,
+                            letterSpacing: 2.0,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.normal,
+                          ),
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(vertical: 12.h),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-            
+
             const Spacer(),
-            
-            // Custom Numpad
+
             CustomNumpad(
               onKeyPressed: _onKeyPressed,
               onDelete: _onDelete,
             ),
-            
+
             SizedBox(height: 20.h),
-            
-            // Next Button
+
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.0.w, vertical: 24.0.h),
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  gradient: _rawPhoneNumber.length == _maxLength ? AppColors.brandGradient : null,
-                  color: _rawPhoneNumber.length == _maxLength ? null : AppColors.primary.withOpacity(0.5),
+                  gradient: _rawPhoneNumber.length == _maxLength && !_isLoading ? AppColors.brandGradient : null,
+                  color: _rawPhoneNumber.length == _maxLength && !_isLoading ? null : AppColors.primary.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(30.r),
-                  boxShadow: _rawPhoneNumber.length == _maxLength ? [
+                  boxShadow: _rawPhoneNumber.length == _maxLength && !_isLoading ? [
                     BoxShadow(
                       color: AppColors.primary.withOpacity(0.3),
                       blurRadius: 15,
@@ -325,7 +458,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                   ] : null,
                 ),
                 child: ElevatedButton(
-                  onPressed: _rawPhoneNumber.length == _maxLength ? _onNext : null,
+                  onPressed: _rawPhoneNumber.length == _maxLength && !_isLoading ? _onNext : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
@@ -334,15 +467,21 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     ),
                     padding: EdgeInsets.symmetric(vertical: 16.h),
                   ),
-                  child: Text(
-                    'Suivant',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? SizedBox(
+                          height: 24.h,
+                          width: 24.w,
+                          child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                        )
+                      : Text(
+                          'Suivant',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
                 ),
               ),
             ),

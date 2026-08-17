@@ -4,8 +4,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'config/routes.dart';
 
-void main() {
+import 'core/services/storage_service.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await StorageService.getInstance();
   runApp(const PasseVoyageApp());
 }
 

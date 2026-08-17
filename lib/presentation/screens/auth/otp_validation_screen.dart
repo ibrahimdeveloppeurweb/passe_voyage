@@ -3,11 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../widgets/custom_numpad.dart';
 import '../../../config/routes.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/services/auth_service.dart';
 
 class OtpValidationScreen extends StatefulWidget {
   final String phoneNumber;
-  
-  const OtpValidationScreen({Key? key, required this.phoneNumber}) : super(key: key);
+  final String countryCode;
+
+  const OtpValidationScreen({Key? key, required this.phoneNumber, this.countryCode = '+225'}) : super(key: key);
 
   @override
   State<OtpValidationScreen> createState() => _OtpValidationScreenState();
@@ -15,32 +17,137 @@ class OtpValidationScreen extends StatefulWidget {
 
 class _OtpValidationScreenState extends State<OtpValidationScreen> {
   String _otpCode = '';
+  bool _isVerifying = false;
 
-  void _onKeyPressed(String value) {
-    if (_otpCode.length < 4) {
+  Future<void> _onKeyPressed(String value) async {
+    if (_otpCode.length < 4 && !_isVerifying) {
       setState(() {
         _otpCode += value;
       });
-      
-      // Auto-validate and navigate when 4 digits are entered
+
       if (_otpCode.length == 4) {
-        Future.delayed(const Duration(milliseconds: 200), () {
-          Navigator.pushReplacementNamed(
-            context,
-            AppRoutes.pinEntry,
-            arguments: {'phoneNumber': widget.phoneNumber},
-          );
+        setState(() {
+          _isVerifying = true;
         });
+
+        final result = await AuthService.verifyOtp(widget.phoneNumber, _otpCode);
+
+        if (mounted) {
+          setState(() {
+            _isVerifying = false;
+          });
+
+          if (result['success'] == true) {
+            Navigator.pushReplacementNamed(
+              context,
+              AppRoutes.pinEntry,
+              arguments: {
+                'phoneNumber': widget.phoneNumber,
+                'countryCode': widget.countryCode,
+              },
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result['message'] ?? 'Code OTP incorrect'),
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+            setState(() {
+              _otpCode = ''; // Réinitialiser le code
+            });
+          }
+        }
       }
     }
   }
 
   void _onDelete() {
-    if (_otpCode.isNotEmpty) {
+    if (_otpCode.isNotEmpty && !_isVerifying) {
       setState(() {
         _otpCode = _otpCode.substring(0, _otpCode.length - 1);
       });
     }
+  }
+
+  Future<void> _resendOtp() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Envoi du nouveau code en cours...')),
+    );
+
+    final result = await AuthService.sendOtp(widget.phoneNumber);
+
+    if (mounted) {
+      if (result['success'] == true) {
+        final otpCode = result['otpCode']?.toString() ?? '1234';
+        _showOtpDevModal(otpCode);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Erreur lors du renvoi OTP'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showOtpDevModal(String otpCode) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+          title: Row(
+            children: [
+              Icon(Icons.sms_rounded, color: AppColors.primary, size: 28.w),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text('Nouveau Code (Mode Dev)', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Votre nouveau code SMS de validation est :',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
+              ),
+              SizedBox(height: 16.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: AppColors.primary, width: 1.5),
+                ),
+                child: Text(
+                  otpCode,
+                  style: TextStyle(
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 8.0,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+              ),
+              child: const Text('OK', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -59,8 +166,7 @@ class _OtpValidationScreenState extends State<OtpValidationScreen> {
         child: Column(
           children: [
             SizedBox(height: 10.h),
-            
-            // Icon Bubble
+
             Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
@@ -80,10 +186,9 @@ class _OtpValidationScreenState extends State<OtpValidationScreen> {
                 size: 28.w,
               ),
             ),
-            
+
             SizedBox(height: 20.h),
-            
-            // Text Message
+
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 40.0.w),
               child: Text(
@@ -97,10 +202,9 @@ class _OtpValidationScreenState extends State<OtpValidationScreen> {
                 ),
               ),
             ),
-            
+
             const Spacer(),
-            
-            // 4 Digit Slots
+
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(4, (index) {
@@ -120,7 +224,7 @@ class _OtpValidationScreenState extends State<OtpValidationScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: isActive 
+                        color: isActive
                             ? AppColors.primary.withOpacity(0.15)
                             : Colors.black.withOpacity(0.04),
                         blurRadius: isActive ? 12 : 8,
@@ -148,14 +252,20 @@ class _OtpValidationScreenState extends State<OtpValidationScreen> {
                 );
               }),
             ),
-            
+
+            if (_isVerifying) ...[
+              SizedBox(height: 16.h),
+              SizedBox(
+                height: 24.h,
+                width: 24.w,
+                child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2.5),
+              ),
+            ],
+
             const Spacer(),
-            
-            // Resend SMS Button
+
             TextButton(
-              onPressed: () {
-                // TODO: Implement resend logic
-              },
+              onPressed: _resendOtp,
               child: Text(
                 'Renvoyer SMS',
                 style: TextStyle(
@@ -165,15 +275,14 @@ class _OtpValidationScreenState extends State<OtpValidationScreen> {
                 ),
               ),
             ),
-            
+
             SizedBox(height: 20.h),
-            
-            // Custom Numpad
+
             CustomNumpad(
               onKeyPressed: _onKeyPressed,
               onDelete: _onDelete,
             ),
-            
+
             SizedBox(height: 30.h),
           ],
         ),
