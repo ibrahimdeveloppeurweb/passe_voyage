@@ -4,6 +4,7 @@ import '../../widgets/custom_numpad.dart';
 import '../../../config/routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/inactivity_service.dart';
 
 class LoginScreen extends StatefulWidget {
   final String phoneNumber;
@@ -51,15 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       if (result['success'] == true) {
-        if (result['offline'] == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Mode hors-ligne : Données locales chargées.'),
-              backgroundColor: Colors.orangeAccent,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
+        InactivityService().unlockSession();
 
         // Redirection directe vers le Dashboard
         Navigator.pushNamedAndRemoveUntil(
@@ -70,8 +63,21 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Code secret PIN incorrect'),
-            backgroundColor: Colors.redAccent,
+            content: Text(
+              result['message'] ?? 'Numéro de téléphone ou code PIN incorrect',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14.sp,
+              ),
+            ),
+            backgroundColor: Colors.black,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            margin: EdgeInsets.all(16.w),
+            duration: const Duration(seconds: 3),
           ),
         );
         setState(() {
@@ -96,16 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            } else {
-              Navigator.pushReplacementNamed(context, AppRoutes.phoneEntry);
-            }
-          },
-        ),
+        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: Column(

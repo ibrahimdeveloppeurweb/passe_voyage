@@ -1,0 +1,86 @@
+{
+  "project_info": {
+    "project_number": "431144234620",
+    "project_id": "passvoyage-c6c03",
+    "storage_bucket": "passvoyage-c6c03.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:431144234620:android:4d6f33365efeb2d42563f9",
+        "android_client_info": {
+          "package_name": "com.example.passvoyage.ibrahim"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWMEgY6naw7VDxv_AtdU3pyv0LScDkZlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:431144234620:android:c57353bb3b752c2d2563f9",
+        "android_client_info": {
+          "package_name": "com.example.passvoyageagent.ibrahim"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWMEgY6naw7VDxv_AtdU3pyv0LScDkZlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:431144234620:android:366b2e36a45be39d2563f9",
+        "android_client_info": {
+          "package_name": "com.example.passvoyage.ibrahim"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWMEgY6naw7VDxv_AtdU3pyv0LScDkZlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:431144234620:android:27b9be35a39899c12563f9",
+        "android_client_info": {
+          "package_name": "com.pass"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWMEgY6naw7VDxv_AtdU3pyv0LScDkZlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

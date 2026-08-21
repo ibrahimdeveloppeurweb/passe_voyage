@@ -18,14 +18,22 @@ import '../presentation/screens/identity/identity_selfie_screen.dart';
 import '../presentation/screens/payments/factures_screen.dart';
 import '../presentation/screens/profile/profile_screen.dart';
 import '../presentation/screens/profile/settings_screen.dart';
+import '../presentation/screens/splash_screen.dart';
+
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class AppRoutes {
-  // API Configuration
-  // static const String apiBaseUrl = 'https://passvoyage.net';
-  static const String apiBaseUrl = 'http://10.0.2.2:8000';
-  static const String baseUrl = '$apiBaseUrl/api';
+  // API Configuration dynamique selon la plateforme (Android 10.0.2.2, iOS/macOS 127.0.0.1)
+  static String get apiBaseUrl {
+    if (kIsWeb) return 'http://localhost:8000';
+    if (Platform.isAndroid) return 'http://10.0.2.2:8000';
+    return 'http://127.0.0.1:8000';
+  }
 
-  
+  static String get baseUrl => '$apiBaseUrl/api';
+
+  static const String splash = '/';
   static const String phoneEntry = '/phone_entry';
   static const String otpValidation = '/otp_validation';
   static const String pinEntry = '/pin_entry';
@@ -49,6 +57,8 @@ class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
+      case splash:
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
       case phoneEntry:
         return MaterialPageRoute(builder: (_) => const PhoneEntryScreen());
       case otpValidation:
@@ -166,7 +176,10 @@ class AppRoutes {
           transitionDuration: const Duration(milliseconds: 400),
         );
       case personalInfo:
-        return MaterialPageRoute(builder: (_) => const PersonalInfoScreen());
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const PersonalInfoScreen(),
+        );
       case factures:
         return MaterialPageRoute(builder: (_) => const FacturesScreen());
       case profile:

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'api_service.dart';
 import 'storage_service.dart';
+import 'notification_push_service.dart';
 
 class AuthService {
   /// Helper pour préfixer le numéro avec l'indicatif pays s'il ne le contient pas déjà
@@ -20,17 +21,19 @@ class AuthService {
   static Future<Map<String, dynamic>> sendOtp(String phone, [String countryCode = '+225']) async {
     try {
       final fullPhone = formatFullPhone(phone, countryCode);
-      final response = await ApiService.post('/api/public/send-otp', {
+      final response = await ApiService.post('/api/public/passenger/send-otp', {
         'phone': fullPhone,
       });
 
       final data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
+      final isAccountExist = data['accountExists'] == true || (data['message'] != null && data['message'].toString().toLowerCase().contains('existe déj'));
+
+      if (response.statusCode == 200 || isAccountExist) {
         return {
           'success': true,
           'message': data['message'] ?? 'Code OTP envoyé',
           'otpCode': data['otpCode'],
-          'accountExists': data['accountExists'] == true,
+          'accountExists': isAccountExist,
         };
       } else {
         debugPrint('⚠️ [AuthService sendOtp Failed] Code ${response.statusCode}: ${response.body}');
@@ -43,7 +46,7 @@ class AuthService {
       debugPrint('💥 [AuthService sendOtp Exception] Error: $e\n$stackTrace');
       return {
         'success': false,
-        'message': 'Impossible de se connecter au serveur. Vérifiez votre connexion Internet.',
+        'message': 'Connexion Internet requise. Veuillez vérifier votre réseau puis réessayer.',
       };
     }
   }
@@ -52,7 +55,7 @@ class AuthService {
   static Future<Map<String, dynamic>> verifyOtp(String phone, String code, [String countryCode = '+225']) async {
     try {
       final fullPhone = formatFullPhone(phone, countryCode);
-      final response = await ApiService.post('/api/public/verify-otp', {
+      final response = await ApiService.post('/api/public/passenger/verify-otp', {
         'phone': fullPhone,
         'code': code,
       });
@@ -74,12 +77,12 @@ class AuthService {
       debugPrint('💥 [AuthService verifyOtp Exception] Error: $e\n$stackTrace');
       return {
         'success': false,
-        'message': 'Erreur de connexion au serveur lors de la vérification OTP.',
+        'message': 'Connexion Internet requise. Veuillez vérifier votre réseau puis réessayer.',
       };
     }
   }
 
-  /// Inscription d'un nouveau passager + stockage local Wave
+  /// Inscription d'un nouveau passager + stockage local
   static Future<Map<String, dynamic>> registerPassenger({
     required String phoneNumber,
     required String pinCode,
@@ -91,6 +94,7 @@ class AuthService {
   }) async {
     try {
       final fullPhone = formatFullPhone(phoneNumber, countryCode);
+      final fcmToken = await NotificationPushService.getFcmToken();
 
       final body = {
         'phoneNumber': fullPhone,
@@ -100,6 +104,7 @@ class AuthService {
         'gender': gender,
         'residenceAddress': residenceAddress,
         'countryCode': countryCode,
+        'fcmToken': fcmToken,
       };
 
       final response = await ApiService.post('/api/public/passenger/register', body);
@@ -119,6 +124,7 @@ class AuthService {
           }
           await storage.savePhoneNumber(fullPhone);
           await storage.savePinCode(pinCode);
+          NotificationPushService.syncFcmToken();
         } catch (storageError) {
           debugPrint('⚠️ [AuthService registerPassenger] Storage save failed: $storageError');
         }
@@ -145,7 +151,7 @@ class AuthService {
     }
   }
 
-  /// Connexion d'un passager existant (Online + Offline Style Wave)
+  /// Connexion d'un passager existant (Online + Offline)
   static Future<Map<String, dynamic>> loginPassenger({
     required String phone,
     required String pinCode,
@@ -153,11 +159,13 @@ class AuthService {
   }) async {
     final storage = await StorageService.getInstance();
     final fullPhone = formatFullPhone(phone, countryCode);
+    final fcmToken = await NotificationPushService.getFcmToken();
 
     try {
       final response = await ApiService.post('/api/public/passenger/login', {
         'phone': fullPhone,
         'pinCode': pinCode,
+        'fcmToken': fcmToken,
       });
 
       final data = jsonDecode(response.body);
@@ -175,6 +183,7 @@ class AuthService {
           }
           await storage.savePhoneNumber(fullPhone);
           await storage.savePinCode(pinCode);
+          NotificationPushService.syncFcmToken();
         } catch (storageError) {
           debugPrint('⚠️ [AuthService loginPassenger] Storage save failed: $storageError');
         }
@@ -195,28 +204,33 @@ class AuthService {
     } catch (e, stackTrace) {
       debugPrint('⚡ [AuthService loginPassenger Offline Fallback] Exception: $e');
 
-      // MODE HORS-LIGNE (STYLE WAVE) : Validation PIN locale si réseau indisponible
       final savedPin = storage.getPinCode();
       final savedPassenger = storage.getPassengerData();
       final savedPhone = storage.getPhoneNumber() ?? savedPassenger?['phoneNumber'];
 
-      // Comparaison propre des numéros de téléphone (sans espaces)
       final cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
       final cleanSavedPhone = (savedPhone ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+      final isPhoneMatching = cleanSavedPhone.isEmpty || cleanSavedPhone == cleanPhone || cleanPhone.endsWith(cleanSavedPhone) || cleanSavedPhone.endsWith(cleanPhone);
 
-      if (savedPin != null && savedPin == pinCode && (cleanSavedPhone.isEmpty || cleanSavedPhone == cleanPhone || cleanPhone.endsWith(cleanSavedPhone) || cleanSavedPhone.endsWith(cleanPhone))) {
-        debugPrint('✅ [Wave Offline Auth Success] Authentifié localement avec succès !');
-        return {
-          'success': true,
-          'offline': true,
-          'message': 'Connexion hors-ligne effectuée',
-          'passenger': savedPassenger,
-        };
+      if (savedPassenger != null && isPhoneMatching) {
+        if (savedPin == null || savedPin == pinCode) {
+          if (savedPin == null) {
+            await storage.savePinCode(pinCode);
+          }
+          await storage.savePassengerData(savedPassenger);
+          debugPrint('✅ [Wave Offline Auth Success] Authentifié localement avec succès !');
+          return {
+            'success': true,
+            'offline': true,
+            'message': 'Connexion hors-ligne effectuée',
+            'passenger': savedPassenger,
+          };
+        }
       }
 
       return {
         'success': false,
-        'message': 'Impossible de se connecter au serveur. Vérifiez votre code secret ou votre connexion Internet.',
+        'message': 'Code secret PIN incorrect (Mode hors-ligne).',
       };
     }
   }

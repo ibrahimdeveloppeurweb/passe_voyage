@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../config/routes.dart';
+import '../../../core/services/passenger_service.dart';
 
 class IdentityDocumentScreen extends StatefulWidget {
   const IdentityDocumentScreen({Key? key}) : super(key: key);
@@ -15,20 +17,46 @@ class IdentityDocumentScreen extends StatefulWidget {
 class _IdentityDocumentScreenState extends State<IdentityDocumentScreen> {
   XFile? _rectoImage;
   XFile? _versoImage;
+  String? _rectoBase64;
+  String? _versoBase64;
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> _pickImage(ImageSource source, Function(XFile) onPicked) async {
+  Future<void> _pickImage(ImageSource source, Function(XFile, String?) onPicked) async {
     try {
-      final XFile? image = await _picker.pickImage(source: source);
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 75,
+      );
       if (image != null) {
-        onPicked(image);
+        String? b64;
+        try {
+          final bytes = await image.readAsBytes();
+          if (bytes.isNotEmpty) {
+            b64 = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+          }
+        } catch (e) {
+          debugPrint('💥 Error encoding image to base64 via readAsBytes: $e');
+          try {
+            final file = File(image.path);
+            final bytes = await file.readAsBytes();
+            if (bytes.isNotEmpty) {
+              b64 = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+            }
+          } catch (e2) {
+            debugPrint('💥 Error encoding image to base64 via File: $e2');
+          }
+        }
+        debugPrint('📸 [IdentityDocumentScreen] Picked image b64 len: ${b64?.length ?? 0}');
+        onPicked(image, b64);
       }
     } catch (e) {
       debugPrint('Error picking image: $e');
     }
   }
 
-  void _showPickerModal(Function(XFile) onPicked) {
+  void _showPickerModal(Function(XFile, String?) onPicked) {
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -171,6 +199,10 @@ class _IdentityDocumentScreenState extends State<IdentityDocumentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final String identityType = args?['identityType'] ?? 'CNI';
+    final bool isPassport = identityType == 'PASSPORT';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -198,33 +230,86 @@ class _IdentityDocumentScreenState extends State<IdentityDocumentScreen> {
               ),
               SizedBox(height: 8.h),
               Text(
-                'Prenez en photo la pièce en vous assurant que les informations sont bien visibles',
+                isPassport
+                    ? 'Prenez en photo la page principale de votre passeport'
+                    : 'Prenez en photo la pièce en vous assurant que les informations sont bien visibles',
                 style: TextStyle(
                   color: AppColors.primary.withOpacity(0.8),
-                  fontSize: 14.sp,
-                  height: 1.4.h,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: 32.h),
+              SizedBox(height: 24.h),
               Expanded(
                 child: ListView(
                   children: [
-                    _buildScanBox('Pièce Recto', _rectoImage, () {
-                      _showPickerModal((file) => setState(() => _rectoImage = file));
+                    _buildScanBox(isPassport ? 'Page Principale Passeport' : 'Pièce Recto', _rectoImage, () {
+                      _showPickerModal((file, b64) => setState(() {
+                        _rectoImage = file;
+                        _rectoBase64 = b64;
+                        IdentitySession.rectoPath = file.path;
+                        IdentitySession.rectoBase64 = b64;
+                      }));
                     }),
-                    _buildScanBox('Pièce Verso', _versoImage, () {
-                      _showPickerModal((file) => setState(() => _versoImage = file));
-                    }),
+                    if (!isPassport)
+                      _buildScanBox('Pièce Verso', _versoImage, () {
+                        _showPickerModal((file, b64) => setState(() {
+                          _versoImage = file;
+                          _versoBase64 = b64;
+                          IdentitySession.versoPath = file.path;
+                          IdentitySession.versoBase64 = b64;
+                        }));
+                      }),
                   ],
                 ),
               ),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: (_rectoImage != null && _versoImage != null)
-                      ? () {
-                          Navigator.pushNamed(context, AppRoutes.identitySelfie);
+                  onPressed: (isPassport ? _rectoImage != null : (_rectoImage != null && _versoImage != null))
+                      ? () async {
+                          String? rB64 = _rectoBase64 ?? IdentitySession.rectoBase64;
+                          String? vB64 = _versoBase64 ?? IdentitySession.versoBase64;
+
+                          if ((rB64 == null || rB64.isEmpty) && _rectoImage != null) {
+                            rB64 = await PassengerService.fileToBase64(_rectoImage!.path);
+                          }
+                          if (!isPassport && (vB64 == null || vB64.isEmpty) && _versoImage != null) {
+                            vB64 = await PassengerService.fileToBase64(_versoImage!.path);
+                          }
+
+                          IdentitySession.rectoBase64 = rB64;
+                          IdentitySession.versoBase64 = vB64;
+                          IdentitySession.rectoPath = _rectoImage?.path;
+                          IdentitySession.versoPath = _versoImage?.path;
+
+                          debugPrint('📸 [IdentityDocumentScreen] Saved to IdentitySession - recto B64 len: ${rB64?.length ?? 0}, verso B64 len: ${vB64?.length ?? 0}');
+
+                          if ((rB64 == null || rB64.isEmpty) || (!isPassport && (vB64 == null || vB64.isEmpty))) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Impossible d\'encoder la photo. Veuillez reprendre la photo.'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                            return;
+                          }
+
+                          if (!mounted) return;
+
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.identitySelfie,
+                            arguments: {
+                              'identityType': identityType,
+                              'rectoPath': _rectoImage?.path,
+                              'versoPath': _versoImage?.path,
+                              'rectoBase64': rB64,
+                              'versoBase64': vB64,
+                            },
+                          );
                         }
                       : null,
                   style: ElevatedButton.styleFrom(

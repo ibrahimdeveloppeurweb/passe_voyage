@@ -28,12 +28,10 @@ class ApiService {
       'Accept': 'application/json',
     };
 
-    if (isPrivate) {
-      final storage = await StorageService.getInstance();
-      final token = storage.getToken();
-      if (token != null && token.isNotEmpty) {
-        headers['Authorization'] = 'Bearer $token';
-      }
+    final storage = await StorageService.getInstance();
+    final token = storage.getToken();
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
     }
 
     return headers;
@@ -41,9 +39,7 @@ class ApiService {
 
   static Future<void> _handleTokenExpiration(http.Response response) async {
     if (response.statusCode == 401) {
-      debugPrint('🔑 [API 401 Expired Token] Expiration détectée. Suppression du token JWT pour forcer le re-déverrouillage PIN...');
-      final storage = await StorageService.getInstance();
-      await storage.clearToken();
+      debugPrint('🔑 [API 401] Token expiré ou non-autorisé. Conservation du profil local passager pour mode hors-ligne.');
     }
   }
 

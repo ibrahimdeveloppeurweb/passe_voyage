@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../config/routes.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/contact_sync_service.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({Key? key}) : super(key: key);
@@ -29,6 +30,38 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       return;
     }
 
+    // Demander obligatoirement l'accès aux contacts du smartphone PENDANT la création de compte
+    final bool isGranted = await ContactSyncService.syncContactsIfPermitted(
+      overridePhone: '$countryCode$phoneNumber',
+    );
+
+    if (!isGranted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFF1E293B),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+            margin: EdgeInsets.all(16.w),
+            duration: const Duration(seconds: 4),
+            content: Row(
+              children: [
+                Icon(Icons.shield_outlined, color: Colors.orangeAccent, size: 24.w),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    'Création interrompue : L\'autorisation d\'accès aux contacts est obligatoire pour créer votre compte.',
+                    style: TextStyle(color: Colors.white, fontSize: 13.sp, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      return; // STOP STRICT : Le compte N'EST PAS créé si l'utilisateur refuse l'accès aux contacts
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -49,14 +82,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       });
 
       if (result['success'] == true) {
-        // Auto-connexion réussie : Token JWT, Profil, Téléphone et PIN stockés localement
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Compte créé et authentifié avec succès !'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        // Envoi des contacts au serveur backend UNIQUEMENT MAINTENANT que le compte passager est créé en BDD
+        ContactSyncService.uploadContactsAfterRegistration();
+
         Navigator.pushNamedAndRemoveUntil(
           context,
           AppRoutes.dashboard,
@@ -64,26 +92,13 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         );
       } else {
         final message = result['message']?.toString() ?? 'Erreur lors de la création du compte';
-        if (message.toLowerCase().contains('déjà') || message.toLowerCase().contains('existe')) {
-          // Compte existant : Redirection immédiate vers l'écran de connexion / déverrouillage PIN
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            AppRoutes.login,
-            (route) => false,
-            arguments: {
-              'phoneNumber': phoneNumber,
-              'countryCode': countryCode,
-            },
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: Colors.redAccent,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
     }
   }
@@ -226,8 +241,12 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic>? args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    final String phoneNumber = args?['phoneNumber']?.toString() ?? '0555568405';
-    final String pinCode = args?['pinCode']?.toString() ?? '1234';
+    final String phoneNumber = (args?['phoneNumber'] != null && args!['phoneNumber'].toString().trim().isNotEmpty)
+        ? args['phoneNumber'].toString().trim()
+        : '';
+    final String pinCode = (args?['pinCode'] != null && args!['pinCode'].toString().trim().isNotEmpty)
+        ? args['pinCode'].toString().trim()
+        : '1234';
     final String countryCode = args?['countryCode']?.toString() ?? '+225';
 
     return Scaffold(

@@ -8,7 +8,7 @@
 PRODUCT_NAME = pass_voyage
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.passVoyage
+PRODUCT_BUNDLE_IDENTIFIER = com.example.passvoyage.ibrahim
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.

@@ -5,6 +5,7 @@ import '../../../config/routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/storage_service.dart';
+import '../../../core/services/contact_sync_service.dart';
 
 class PhoneEntryScreen extends StatefulWidget {
   const PhoneEntryScreen({Key? key}) : super(key: key);
@@ -165,8 +166,11 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
       _isLoading = false;
     });
 
-    if (result['success'] == true) {
-      if (result['accountExists'] == true) {
+    final isAccountExist = result['accountExists'] == true || 
+        (result['message'] != null && result['message'].toString().toLowerCase().contains('existe déj'));
+
+    if (result['success'] == true || isAccountExist) {
+      if (isAccountExist) {
         // Le numéro possède déjà un compte passager -> Redirection directe et silencieuse vers LoginScreen
         if (mounted) {
           Navigator.pushNamed(
@@ -179,20 +183,77 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
           );
         }
       } else {
-        // Nouveau numéro -> Processus normal de création
+        // Nouveau numéro -> Demander obligatoirement la permission d'accès aux contacts AU STADE OTP
+        final bool isGranted = await ContactSyncService.syncContactsIfPermitted(
+          overridePhone: fullPhone,
+        );
+
+        if (!isGranted) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: const Color(0xFF1E293B),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                margin: EdgeInsets.all(16.w),
+                duration: const Duration(seconds: 4),
+                content: Row(
+                  children: [
+                    Icon(Icons.shield_outlined, color: Colors.orangeAccent, size: 24.w),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Text(
+                        'Accès aux contacts refusé : Le processus s\'arrête à l\'étape OTP. L\'accès est obligatoire.',
+                        style: TextStyle(color: Colors.white, fontSize: 13.sp, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          return; // STOP STRICT AU STADE OTP ! Impossible de continuer sans permission
+        }
+
         final String? otpCode = result['otpCode']?.toString();
         if (mounted) {
           await _showOtpDevModal(otpCode ?? '1234');
         }
       }
     } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Erreur lors de l\'envoi OTP'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+      // Échec de la vérification réseau (Pas d'Internet)
+      final storage = await StorageService.getInstance();
+      final savedPhone = storage.getPhoneNumber() ?? storage.getPassengerData()?['phoneNumber'] ?? '';
+      
+      final cleanTyped = fullPhone.replaceAll(RegExp(r'[^0-9]'), '');
+      final cleanSaved = savedPhone.replaceAll(RegExp(r'[^0-9]'), '');
+
+      // Si le numéro saisi correspond au compte enregistré sur ce téléphone -> Connexion PIN Hors-Ligne
+      if (cleanSaved.isNotEmpty && (cleanSaved == cleanTyped || cleanTyped.endsWith(cleanSaved) || cleanSaved.endsWith(cleanTyped))) {
+        if (mounted) {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.login,
+            arguments: {
+              'phoneNumber': fullPhone,
+              'countryCode': _selectedCode,
+            },
+          );
+        }
+      } else {
+        // Sinon -> Message SnackBar informant que la connexion Internet est requise pour créer ou vérifier un nouveau compte
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                result['message'] ?? 'Connexion Internet requise. Veuillez vérifier votre réseau puis réessayer.',
+                style: const TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.black87,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
       }
     }
   }
@@ -247,18 +308,51 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
           ),
           actions: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Fermer le modal
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.otpValidation,
-                  arguments: {
-                    'phoneNumber': _rawPhoneNumber,
-                    'countryCode': _selectedCode,
-                    'formattedPhone': _controller.text,
-                    'otpCode': otpCode,
-                  },
+              onPressed: () async {
+                final bool isGranted = await ContactSyncService.syncContactsIfPermitted(
+                  overridePhone: '$_selectedCode$_rawPhoneNumber',
                 );
+
+                if (!isGranted) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: const Color(0xFF1E293B),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                        margin: EdgeInsets.all(16.w),
+                        duration: const Duration(seconds: 4),
+                        content: Row(
+                          children: [
+                            Icon(Icons.shield_outlined, color: Colors.orangeAccent, size: 24.w),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(
+                                'Accès aux contacts refusé : La saisie du code OTP est bloquée.',
+                                style: TextStyle(color: Colors.white, fontSize: 13.sp, fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  return; // STOP STRICT !
+                }
+
+                if (mounted) {
+                  Navigator.pop(context); // Fermer le modal
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.otpValidation,
+                    arguments: {
+                      'phoneNumber': _rawPhoneNumber,
+                      'countryCode': _selectedCode,
+                      'formattedPhone': _controller.text,
+                      'otpCode': otpCode,
+                    },
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,

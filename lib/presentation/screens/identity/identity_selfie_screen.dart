@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../config/routes.dart';
+import '../../../core/services/passenger_service.dart';
 
 class IdentitySelfieScreen extends StatefulWidget {
   const IdentitySelfieScreen({Key? key}) : super(key: key);
@@ -14,6 +16,87 @@ class IdentitySelfieScreen extends StatefulWidget {
 
 class _IdentitySelfieScreenState extends State<IdentitySelfieScreen> {
   XFile? _selfieImage;
+  String? _selfieBase64;
+  bool _isSubmitting = false;
+
+  Future<void> _submitIdentity({
+    required String identityType,
+    String? rectoPath,
+    String? versoPath,
+    String? rectoBase64,
+    String? versoBase64,
+  }) async {
+    if (_selfieImage == null || _isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    final result = await PassengerService.submitIdentity(
+      identityType: identityType,
+      rectoPath: rectoPath,
+      versoPath: versoPath,
+      selfiePath: _selfieImage?.path,
+      rectoBase64: rectoBase64,
+      versoBase64: versoBase64,
+      selfieBase64: _selfieBase64,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isSubmitting = false;
+      });
+
+      if (result['success'] == true) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.dashboard,
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result['message'] ?? 'Connexion Internet requise. Veuillez vérifier votre réseau puis réessayer.',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.black87,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _takeSelfieDirectly() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.front,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 75,
+      );
+      if (image != null) {
+        String? b64;
+        try {
+          final bytes = await image.readAsBytes();
+          if (bytes.isNotEmpty) {
+            b64 = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+          }
+        } catch (e) {
+          debugPrint('💥 Error encoding selfie to base64: $e');
+        }
+        setState(() {
+          _selfieImage = image;
+          _selfieBase64 = b64;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error taking selfie: $e');
+    }
+  }
 
   Widget _buildRuleItem(String text) {
     return Padding(
@@ -81,6 +164,13 @@ class _IdentitySelfieScreenState extends State<IdentitySelfieScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final String identityType = args?['identityType'] ?? IdentitySession.identityType;
+    final String? rectoPath = args?['rectoPath'] ?? IdentitySession.rectoPath;
+    final String? versoPath = args?['versoPath'] ?? IdentitySession.versoPath;
+    final String? rectoBase64 = args?['rectoBase64'] ?? IdentitySession.rectoBase64;
+    final String? versoBase64 = args?['versoBase64'] ?? IdentitySession.versoBase64;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -198,14 +288,7 @@ class _IdentitySelfieScreenState extends State<IdentitySelfieScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () async {
-                          final result = await Navigator.pushNamed(context, AppRoutes.customCamera);
-                          if (result != null && result is XFile) {
-                            setState(() {
-                              _selfieImage = result;
-                            });
-                          }
-                        },
+                        onPressed: () => _takeSelfieDirectly(),
                         icon: Icon(_selfieImage != null ? Icons.check : Icons.camera_alt, color: Colors.white),
                         label: Text(
                           _selfieImage != null ? 'Photo prise' : 'Prendre une photo',
@@ -228,21 +311,14 @@ class _IdentitySelfieScreenState extends State<IdentitySelfieScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _selfieImage != null
-                      ? () {
-                          // Complete process and go back to dashboard
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            AppRoutes.dashboard,
-                            (route) => false,
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Identification soumise avec succès !"),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
-                        }
+                  onPressed: (_selfieImage != null && !_isSubmitting)
+                      ? () => _submitIdentity(
+                            identityType: identityType,
+                            rectoPath: rectoPath,
+                            versoPath: versoPath,
+                            rectoBase64: rectoBase64,
+                            versoBase64: versoBase64,
+                          )
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -252,14 +328,20 @@ class _IdentitySelfieScreenState extends State<IdentitySelfieScreen> {
                       borderRadius: BorderRadius.circular(30.r),
                     ),
                   ),
-                  child: Text(
-                    'Continuer',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isSubmitting
+                      ? SizedBox(
+                          height: 20.h,
+                          width: 20.h,
+                          child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : Text(
+                          'Continuer',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
             ],

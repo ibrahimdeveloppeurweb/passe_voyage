@@ -4,6 +4,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/theme/app_colors.dart';
 
+import '../../../core/services/passenger_service.dart';
+
 class GareLocation {
   final double lat;
   final double lng;
@@ -23,9 +25,10 @@ class GaresScreen extends StatefulWidget {
 class _GaresScreenState extends State<GaresScreen> {
   String _searchQuery = "";
   final MapController _mapController = MapController();
-  final LatLng _userLocation = const LatLng(5.345317, -4.024429); // User's simulated GPS position (Cocody)
+  final LatLng _userLocation = const LatLng(5.345317, -4.024429); // Position GPS passager (Cocody)
+  bool _isLoadingGares = true;
   
-  final List<GareLocation> _allGares = [
+  List<GareLocation> _allGares = [
     GareLocation(5.355317, -4.014429, "Gare UTB Adjamé", true),
     GareLocation(5.328317, -4.012429, "Gare AVS Plateau", false),
     GareLocation(5.301317, -3.992429, "Gare MT Marcory", true),
@@ -33,6 +36,61 @@ class _GaresScreenState extends State<GaresScreen> {
     GareLocation(5.335317, -4.064429, "Gare UTB Yopougon", true),
     GareLocation(5.345317, -4.024429, "Gare AVS Cocody", false),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBackendGares();
+  }
+
+  Future<void> _loadBackendGares() async {
+    try {
+      final config = await PassengerService.getDemandeCreditConfig();
+      if (mounted && config['success'] == true) {
+        final List<dynamic> comps = config['companies'] ?? [];
+        if (comps.isNotEmpty) {
+          final List<GareLocation> dynamicGares = [];
+          // Coordonnées de référence autour d'Abidjan pour les gares partenaires
+          final List<LatLng> baseCoords = [
+            const LatLng(5.355317, -4.014429), // Adjamé
+            const LatLng(5.328317, -4.012429), // Plateau
+            const LatLng(5.301317, -3.992429), // Marcory
+            const LatLng(5.295317, -4.008429), // Treichville
+            const LatLng(5.335317, -4.064429), // Yopougon
+            const LatLng(5.345317, -4.024429), // Cocody
+            const LatLng(5.385317, -4.034429), // Abobo
+            const LatLng(5.315317, -3.974429), // Koumassi
+          ];
+
+          for (int i = 0; i < comps.length; i++) {
+            final comp = comps[i];
+            final String compName = (comp['name'] ?? comp['nom'] ?? 'Gare Partenaire').toString();
+            final double lat = (comp['lat'] != null) ? (comp['lat'] as num).toDouble() : baseCoords[i % baseCoords.length].latitude;
+            final double lng = (comp['lng'] != null) ? (comp['lng'] as num).toDouble() : baseCoords[i % baseCoords.length].longitude;
+            final bool isStarred = (i % 2 == 0);
+
+            dynamicGares.add(GareLocation(lat, lng, "Gare $compName", isStarred));
+          }
+
+          if (dynamicGares.isNotEmpty) {
+            setState(() {
+              _allGares = dynamicGares;
+              _isLoadingGares = false;
+            });
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('💥 Error loading backend gares: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoadingGares = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

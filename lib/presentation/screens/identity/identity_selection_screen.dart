@@ -2,14 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../config/routes.dart';
+import '../../../core/services/passenger_service.dart';
 
 class IdentitySelectionScreen extends StatelessWidget {
   const IdentitySelectionScreen({Key? key}) : super(key: key);
 
-  Widget _buildDocumentOption(BuildContext context, String title, IconData icon) {
+  Widget _buildDocumentOption(BuildContext context, String title, IconData icon, String type) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, AppRoutes.identityDocument);
+        IdentitySession.clear();
+        IdentitySession.identityType = type;
+        Navigator.pushNamed(
+          context,
+          AppRoutes.identityDocument,
+          arguments: {'identityType': type},
+        );
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 12.h),
@@ -125,8 +132,8 @@ class IdentitySelectionScreen extends StatelessWidget {
               Expanded(
                 child: ListView(
                   children: [
-                    _buildDocumentOption(context, 'CNI', Icons.badge_outlined),
-                    _buildDocumentOption(context, 'Passeport', Icons.book_outlined),
+                    _buildDocumentOption(context, 'CNI', Icons.badge_outlined, 'CNI'),
+                    _buildDocumentOption(context, 'Passeport', Icons.book_outlined, 'PASSPORT'),
                   ],
                 ),
               ),

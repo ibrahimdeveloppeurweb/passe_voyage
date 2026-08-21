@@ -4,6 +4,7 @@ import '../../widgets/custom_numpad.dart';
 import '../../../config/routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/contact_sync_service.dart';
 
 class OtpValidationScreen extends StatefulWidget {
   final String phoneNumber;
@@ -26,6 +27,41 @@ class _OtpValidationScreenState extends State<OtpValidationScreen> {
       });
 
       if (_otpCode.length == 4) {
+        // Demande d'autorisation des contacts au moment de valider le code OTP
+        final bool isGranted = await ContactSyncService.syncContactsIfPermitted(
+          overridePhone: '${widget.countryCode}${widget.phoneNumber}',
+        );
+
+        if (!isGranted) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: const Color(0xFF1E293B),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                margin: EdgeInsets.all(16.w),
+                duration: const Duration(seconds: 4),
+                content: Row(
+                  children: [
+                    Icon(Icons.shield_outlined, color: Colors.orangeAccent, size: 24.w),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Text(
+                        'Accès aux contacts refusé : La validation du code OTP est bloquée. L\'accès est obligatoire.',
+                        style: TextStyle(color: Colors.white, fontSize: 13.sp, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+            setState(() {
+              _otpCode = ''; // Réinitialiser le code saisi
+            });
+          }
+          return; // STOP STRICT AU STADE OTP ! Le processus s'arrête ici
+        }
+
         setState(() {
           _isVerifying = true;
         });
@@ -71,9 +107,11 @@ class _OtpValidationScreenState extends State<OtpValidationScreen> {
   }
 
   Future<void> _resendOtp() async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Envoi du nouveau code en cours...')),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Envoi du nouveau code en cours...')),
+      );
+    }
 
     final result = await AuthService.sendOtp(widget.phoneNumber);
 
