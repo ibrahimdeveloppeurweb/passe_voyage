@@ -25,13 +25,14 @@ import 'package:flutter/foundation.dart';
 
 class AppRoutes {
   // API Configuration dynamique selon la plateforme (Android 10.0.2.2, iOS/macOS 127.0.0.1)
-  static String get apiBaseUrl {
-    if (kIsWeb) return 'http://localhost:8000';
-    if (Platform.isAndroid) return 'http://10.0.2.2:8000';
-    return 'http://127.0.0.1:8000';
-  }
+  // static String get apiBaseUrl {
+  //   if (kIsWeb) return 'http://localhost:8000';
+  //   if (Platform.isAndroid) return 'http://10.0.2.2:8000';
+  //   return 'http://127.0.0.1:8000';
+  // }
+  static const String baseUrl = 'https://monpassvoyage.net/api';
 
-  static String get baseUrl => '$apiBaseUrl/api';
+  //static String get baseUrl => '$apiBaseUrl/api';
 
   static const String splash = '/';
   static const String phoneEntry = '/phone_entry';
@@ -65,25 +66,33 @@ class AppRoutes {
         final args = settings.arguments as Map<String, dynamic>?;
         final phoneNumber = args?['phoneNumber'] ?? '';
         final countryCode = args?['countryCode'] ?? '+225';
-        return MaterialPageRoute(builder: (_) => OtpValidationScreen(phoneNumber: phoneNumber, countryCode: countryCode));
+        return MaterialPageRoute(
+            builder: (_) => OtpValidationScreen(
+                phoneNumber: phoneNumber, countryCode: countryCode));
       case pinEntry:
         final args = settings.arguments as Map<String, dynamic>?;
         final phoneNumber = args?['phoneNumber'] ?? '';
         final countryCode = args?['countryCode'] ?? '+225';
-        return MaterialPageRoute(builder: (_) => PinEntryScreen(phoneNumber: phoneNumber, countryCode: countryCode));
+        return MaterialPageRoute(
+            builder: (_) => PinEntryScreen(
+                phoneNumber: phoneNumber, countryCode: countryCode));
       case login:
         final args = settings.arguments as Map<String, dynamic>?;
         final phoneNumber = args?['phoneNumber'] ?? '';
         final countryCode = args?['countryCode'] ?? '+225';
-        return MaterialPageRoute(builder: (_) => LoginScreen(phoneNumber: phoneNumber, countryCode: countryCode));
+        return MaterialPageRoute(
+            builder: (_) => LoginScreen(
+                phoneNumber: phoneNumber, countryCode: countryCode));
       case dashboard:
         return PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const DashboardScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const DashboardScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(0.0, 1.0);
             const end = Offset.zero;
             const curve = Curves.easeInOutCubic;
-            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
             return SlideTransition(
               position: animation.drive(tween),
               child: child,
@@ -94,12 +103,14 @@ class AppRoutes {
       case notifications:
         return PageRouteBuilder(
           settings: settings,
-          pageBuilder: (context, animation, secondaryAnimation) => const NotificationsScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const NotificationsScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
             const curve = Curves.easeInOutCubic;
-            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
             return SlideTransition(
               position: animation.drive(tween),
               child: child,
@@ -108,9 +119,11 @@ class AppRoutes {
           transitionDuration: const Duration(milliseconds: 400),
         );
       case identitySelection:
-        return MaterialPageRoute(builder: (_) => const IdentitySelectionScreen());
+        return MaterialPageRoute(
+            builder: (_) => const IdentitySelectionScreen());
       case identityDocument:
-        return MaterialPageRoute(builder: (_) => const IdentityDocumentScreen());
+        return MaterialPageRoute(
+            builder: (_) => const IdentityDocumentScreen());
       case identitySelfie:
         return MaterialPageRoute(builder: (_) => const IdentitySelfieScreen());
       case customCamera:
@@ -120,12 +133,14 @@ class AppRoutes {
       case demandeCredit:
         return PageRouteBuilder(
           settings: settings,
-          pageBuilder: (context, animation, secondaryAnimation) => const DemandeCreditScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const DemandeCreditScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(1.0, 0.0); // Slide from right for new screens
             const end = Offset.zero;
             const curve = Curves.easeInOutCubic;
-            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
             return SlideTransition(
               position: animation.drive(tween),
               child: child,
@@ -136,12 +151,14 @@ class AppRoutes {
       case remboursement:
         return PageRouteBuilder(
           settings: settings,
-          pageBuilder: (context, animation, secondaryAnimation) => const RemboursementScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const RemboursementScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
             const curve = Curves.easeInOutCubic;
-            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
             return SlideTransition(
               position: animation.drive(tween),
               child: child,
@@ -152,26 +169,32 @@ class AppRoutes {
       case mesPass:
         return PageRouteBuilder(
           settings: settings,
-          pageBuilder: (context, animation, secondaryAnimation) => const MesPassScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const MesPassScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
             const curve = Curves.easeInOutCubic;
-            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-            return SlideTransition(position: animation.drive(tween), child: child);
+            var tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            return SlideTransition(
+                position: animation.drive(tween), child: child);
           },
           transitionDuration: const Duration(milliseconds: 400),
         );
       case mesRemboursements:
         return PageRouteBuilder(
           settings: settings,
-          pageBuilder: (context, animation, secondaryAnimation) => const MesRemboursementsScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const MesRemboursementsScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
             const curve = Curves.easeInOutCubic;
-            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-            return SlideTransition(position: animation.drive(tween), child: child);
+            var tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            return SlideTransition(
+                position: animation.drive(tween), child: child);
           },
           transitionDuration: const Duration(milliseconds: 400),
         );

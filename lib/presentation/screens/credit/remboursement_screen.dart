@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'dart:io';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/services/passenger_service.dart';
+import '../../../core/services/storage_service.dart';
 import '../../../config/routes.dart';
 
 class RemboursementScreen extends StatefulWidget {
@@ -22,7 +24,7 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
   int _totalDebt = 0;
   String? _creditUuid;
 
-  int get _maxDebt => _totalDebt > 0 ? _totalDebt : _availableCredit;
+  int get _maxDebt => _totalDebt;
 
   int get _enteredAmount {
     final text = _amountController.text.replaceAll(' ', '').trim();
@@ -39,7 +41,7 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchPassengerDebt();
+    _loadPassengerDebtLocally();
     _amountController.addListener(_onAmountChanged);
   }
 
@@ -47,12 +49,15 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
     setState(() {});
   }
 
-  Future<void> _fetchPassengerDebt() async {
-    final data = await PassengerService.getDashboardData();
-    if (mounted && data['success'] == true) {
+  Future<void> _loadPassengerDebtLocally() async {
+    final storage = await StorageService.getInstance();
+    final passenger = storage.getPassengerData();
+    
+    if (mounted && passenger != null) {
       setState(() {
-        _availableCredit = data['availableCredit'] ?? 0;
-        _totalDebt = data['totalDebt'] ?? _availableCredit;
+        _availableCredit = passenger['availableCredit'] ?? 0;
+        // Le solde crédit à rembourser correspond à totalDebt
+        _totalDebt = passenger['totalDebt'] ?? 0;
       });
     }
   }
@@ -165,50 +170,59 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
                   SizedBox(height: 20.h),
 
                   // Payment Options
-                  _buildPaymentOptionTile(
-                    title: 'Wave',
-                    subtitle: 'Paiement instantané Wave',
-                    icon: Icons.waves,
-                    badgeColor: const Color(0xFF1DC4FF),
-                    value: 'Wave',
-                    groupValue: selectedMethod,
-                    onChanged: (val) => setModalState(() => selectedMethod = val!),
-                  ),
-                  _buildPaymentOptionTile(
-                    title: 'Orange Money',
-                    subtitle: 'Paiement Mobile Money Orange',
-                    icon: Icons.phone_android,
-                    badgeColor: const Color(0xFFFF6600),
-                    value: 'Orange Money',
-                    groupValue: selectedMethod,
-                    onChanged: (val) => setModalState(() => selectedMethod = val!),
-                  ),
-                  _buildPaymentOptionTile(
-                    title: 'MTN Mobile Money',
-                    subtitle: 'Paiement Mobile Money MTN',
-                    icon: Icons.account_balance_wallet,
-                    badgeColor: const Color(0xFFFFCC00),
-                    value: 'MTN Mobile Money',
-                    groupValue: selectedMethod,
-                    onChanged: (val) => setModalState(() => selectedMethod = val!),
-                  ),
-                  _buildPaymentOptionTile(
-                    title: 'Moov Money',
-                    subtitle: 'Paiement Mobile Money Moov',
-                    icon: Icons.smartphone,
-                    badgeColor: const Color(0xFF0055A5),
-                    value: 'Moov Money',
-                    groupValue: selectedMethod,
-                    onChanged: (val) => setModalState(() => selectedMethod = val!),
-                  ),
-                  _buildPaymentOptionTile(
-                    title: 'Carte Bancaire',
-                    subtitle: 'Paiement par carte bancaire',
-                    icon: Icons.credit_card,
-                    badgeColor: AppColors.primary,
-                    value: 'Carte Bancaire',
-                    groupValue: selectedMethod,
-                    onChanged: (val) => setModalState(() => selectedMethod = val!),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildPaymentOptionTile(
+                            title: 'Wave',
+                            subtitle: 'Paiement instantané Wave',
+                            icon: Icons.waves,
+                            badgeColor: const Color(0xFF1DC4FF),
+                            value: 'Wave',
+                            groupValue: selectedMethod,
+                            onChanged: (val) => setModalState(() => selectedMethod = val!),
+                          ),
+                          _buildPaymentOptionTile(
+                            title: 'Orange Money',
+                            subtitle: 'Paiement Mobile Money Orange',
+                            icon: Icons.phone_android,
+                            badgeColor: const Color(0xFFFF6600),
+                            value: 'Orange Money',
+                            groupValue: selectedMethod,
+                            onChanged: (val) => setModalState(() => selectedMethod = val!),
+                          ),
+                          _buildPaymentOptionTile(
+                            title: 'MTN Mobile Money',
+                            subtitle: 'Paiement Mobile Money MTN',
+                            icon: Icons.account_balance_wallet,
+                            badgeColor: const Color(0xFFFFCC00),
+                            value: 'MTN Mobile Money',
+                            groupValue: selectedMethod,
+                            onChanged: (val) => setModalState(() => selectedMethod = val!),
+                          ),
+                          _buildPaymentOptionTile(
+                            title: 'Moov Money',
+                            subtitle: 'Paiement Mobile Money Moov',
+                            icon: Icons.smartphone,
+                            badgeColor: const Color(0xFF0055A5),
+                            value: 'Moov Money',
+                            groupValue: selectedMethod,
+                            onChanged: (val) => setModalState(() => selectedMethod = val!),
+                          ),
+                          _buildPaymentOptionTile(
+                            title: 'Carte Bancaire',
+                            subtitle: 'Paiement par carte bancaire',
+                            icon: Icons.credit_card,
+                            badgeColor: AppColors.primary,
+                            value: 'Carte Bancaire',
+                            groupValue: selectedMethod,
+                            onChanged: (val) => setModalState(() => selectedMethod = val!),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
 
                   SizedBox(height: 24.h),
@@ -216,7 +230,6 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
                   // Confirm Payment Button
                   SizedBox(
                     width: double.infinity,
-                    height: 52.h,
                     child: ElevatedButton(
                       onPressed: _isLoading
                           ? null
@@ -226,6 +239,7 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
+                        padding: EdgeInsets.symmetric(vertical: 18.h),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14.r),
                         ),
@@ -241,6 +255,7 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
                               style: TextStyle(
                                 fontSize: 15.sp,
                                 fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
                                 color: Colors.white,
                               ),
                             ),
@@ -319,6 +334,46 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
 
   Future<void> _processPayment(int amount, String paymentMethod) async {
     setState(() => _isLoading = true);
+
+    // Vérification de la connexion Internet
+    bool hasInternet = false;
+    try {
+      final result = await InternetAddress.lookup('google.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        hasInternet = true;
+      }
+    } catch (_) {
+      hasInternet = false;
+    }
+
+    if (!hasInternet) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+            title: Row(
+              children: [
+                Icon(Icons.wifi_off, color: AppColors.error, size: 28.w),
+                SizedBox(width: 8.w),
+                const Text('Erreur de connexion', style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: const Text(
+              'Aucune connexion Internet détectée. Vous devez être connecté à Internet pour effectuer un paiement.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
 
     // Call API endpoint
     final res = await PassengerService.submitReimbursement(
@@ -408,7 +463,6 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
               SizedBox(height: 24.h),
               SizedBox(
                 width: double.infinity,
-                height: 48.h,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context); // Close dialog
@@ -416,6 +470,7 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
+                    padding: EdgeInsets.symmetric(vertical: 18.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14.r),
                     ),
@@ -425,6 +480,7 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
                     style: TextStyle(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
                       color: Colors.white,
                     ),
                   ),
@@ -522,7 +578,7 @@ class _RemboursementScreenState extends State<RemboursementScreen> {
                               ),
                               SizedBox(height: 4.h),
                               Text(
-                                '${_currencyFormat.format(_totalDebt > 0 ? _totalDebt : _availableCredit)} FCFA',
+                                '${_currencyFormat.format(_totalDebt)} FCFA',
                                 style: TextStyle(
                                   fontSize: 20.sp,
                                   fontWeight: FontWeight.w900,

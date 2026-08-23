@@ -187,127 +187,136 @@ class _IdentitySelfieScreenState extends State<IdentitySelfieScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildProgressBar(3),
-              Text(
-                'Prenez un selfie',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 28.sp,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'Prendre une photo de vous',
-                style: TextStyle(
-                  color: AppColors.primary.withOpacity(0.8),
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 24.h),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info, color: AppColors.primary, size: 20.w),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text(
-                      'Une photo ne satisfaisant pas aux exigences exposées ci-dessous ne sera pas admise.',
-                      style: TextStyle(
-                        color: AppColors.primary.withOpacity(0.9),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13.sp,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              _buildRuleItem('Visage dégagé'),
-              _buildRuleItem('Être dans un environnement éclairé'),
-              _buildRuleItem('Éviter les reflets de lunettes'),
-              _buildRuleItem('Ne pas mettre de lunettes de soleil'),
-              _buildRuleItem('Ne pas être torse nu'),
-              SizedBox(height: 32.h),
-              
-              // Selfie Box
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(24.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    if (_selfieImage != null)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8.r),
-                        child: Image.file(
-                          File(_selfieImage!.path),
-                          height: 120.h,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildProgressBar(3),
+                      Text(
+                        'Prenez un selfie',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 28.sp,
+                          fontWeight: FontWeight.w900,
                         ),
-                      )
-                    else
-                      Stack(
-                        alignment: Alignment.center,
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        'Prendre une photo de vous',
+                        style: TextStyle(
+                          color: AppColors.primary.withOpacity(0.8),
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 24.h),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.crop_free, size: 80.w, color: Colors.grey[300]),
-                          Icon(Icons.person, size: 40.w, color: AppColors.primary),
+                          Icon(Icons.info, color: AppColors.primary, size: 20.w),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Text(
+                              'Une photo ne satisfaisant pas aux exigences exposées ci-dessous ne sera pas admise.',
+                              style: TextStyle(
+                                color: AppColors.primary.withOpacity(0.9),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13.sp,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      'Selfie Photo',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'Il est requis par la loi de vérifier votre identité en tant que nouvel utilisateur.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                    SizedBox(height: 20.h),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _takeSelfieDirectly(),
-                        icon: Icon(_selfieImage != null ? Icons.check : Icons.camera_alt, color: Colors.white),
-                        label: Text(
-                          _selfieImage != null ? 'Photo prise' : 'Prendre une photo',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                      SizedBox(height: 16.h),
+                      _buildRuleItem('Visage dégagé'),
+                      _buildRuleItem('Être dans un environnement éclairé'),
+                      _buildRuleItem('Éviter les reflets de lunettes'),
+                      _buildRuleItem('Ne pas mettre de lunettes de soleil'),
+                      _buildRuleItem('Ne pas être torse nu'),
+                      SizedBox(height: 32.h),
+                      
+                      // Selfie Box
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(24.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
+                        child: Column(
+                          children: [
+                            if (_selfieImage != null)
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8.r),
+                                child: Image.file(
+                                  File(_selfieImage!.path),
+                                  height: 120.h,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            else
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Icon(Icons.crop_free, size: 80.w, color: Colors.grey[300]),
+                                  Icon(Icons.person, size: 40.w, color: AppColors.primary),
+                                ],
+                              ),
+                            SizedBox(height: 16.h),
+                            Text(
+                              'Selfie Photo',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 8.h),
+                            Text(
+                              'Il est requis par la loi de vérifier votre identité en tant que nouvel utilisateur.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12.sp,
+                              ),
+                            ),
+                            SizedBox(height: 20.h),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () => _takeSelfieDirectly(),
+                                icon: Icon(_selfieImage != null ? Icons.check : Icons.camera_alt, color: Colors.white),
+                                label: Text(
+                                  _selfieImage != null ? 'Photo prise' : 'Prendre une photo',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 24.h),
+                    ],
+                  ),
                 ),
               ),
-              const Spacer(),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

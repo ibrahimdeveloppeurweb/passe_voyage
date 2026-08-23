@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:431144234620:android:4d6f33365efeb2d42563f9",
         "android_client_info": {
-          "package_name": "com.example.passvoyage.ibrahim"
+          "package_name": "com.example.pass_voyage"
         }
       },
       "oauth_client": [],
@@ -28,7 +28,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:431144234620:android:c57353bb3b752c2d2563f9",
         "android_client_info": {
-          "package_name": "com.example.passvoyageagent.ibrahim"
+          "package_name": "com.example.passe_voyage_agent"
         }
       },
       "oauth_client": [],
@@ -48,6 +48,25 @@
         "mobilesdk_app_id": "1:431144234620:android:366b2e36a45be39d2563f9",
         "android_client_info": {
           "package_name": "com.example.passvoyage.ibrahim"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWMEgY6naw7VDxv_AtdU3pyv0LScDkZlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:431144234620:android:84be13df283385f32563f9",
+        "android_client_info": {
+          "package_name": "com.example.passvoyageagent.ibrahim"
         }
       },
       "oauth_client": [],

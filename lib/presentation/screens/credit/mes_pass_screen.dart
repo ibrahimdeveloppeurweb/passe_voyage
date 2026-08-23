@@ -61,8 +61,8 @@ class _MesPassScreenState extends State<MesPassScreen> {
         final Uint8List bytes = base64Decode(cleanBase64);
         return Image.memory(
           bytes,
-          width: 230.w,
-          height: 230.w,
+          width: 280.w,
+          height: 280.w,
           fit: BoxFit.contain,
         );
       } catch (e) {
@@ -71,7 +71,7 @@ class _MesPassScreenState extends State<MesPassScreen> {
     }
     return Icon(
       Icons.qr_code_2,
-      size: 230.w,
+      size: 280.w,
       color:
           ticketStatus == 'Valide' ? AppColors.textPrimary : Colors.grey[300],
     );
@@ -145,6 +145,11 @@ class _MesPassScreenState extends State<MesPassScreen> {
                                 : '*** *** ***');
                     final String? qrContent =
                         ticketData['qrCodeContent']?.toString();
+                    
+                    final String actualTicketStatus = ticketData['status']?.toString().toUpperCase() ?? 'PENDING';
+                    final bool isScanned = actualTicketStatus == 'SCANNED' || ticketData['isUsed'] == true;
+                    final bool isRefused = actualTicketStatus == 'REFUSED';
+                    final bool isValidated = actualTicketStatus == 'VALIDATED';
 
                     return SingleChildScrollView(
                       child: Column(
@@ -181,66 +186,83 @@ class _MesPassScreenState extends State<MesPassScreen> {
                                 TextStyle(fontSize: 16.sp, color: Colors.grey),
                           ),
                           SizedBox(height: 30.h),
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              _buildQrCodeWidget(qrContent, ticketStatus),
-                              if (ticketStatus == 'Utilisé')
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 24.w, vertical: 12.h),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.error,
-                                    borderRadius: BorderRadius.circular(8.r),
-                                  ),
-                                  child: Text(
-                                    'SCANNÉ',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24.sp,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 4,
-                                    ),
-                                  ),
-                                ),
-                              if (ticketStatus == 'En validation')
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 24.w, vertical: 12.h),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange,
-                                    borderRadius: BorderRadius.circular(8.r),
-                                  ),
-                                  child: Text(
-                                    'EN ATTENTE',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24.sp,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 4,
-                                    ),
-                                  ),
-                                ),
-                              if (ticketStatus == 'Refusé')
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 24.w, vertical: 12.h),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.error,
-                                    borderRadius: BorderRadius.circular(8.r),
-                                  ),
-                                  child: Text(
-                                    'REFUSÉ',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24.sp,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 4,
-                                    ),
-                                  ),
-                                ),
-                            ],
+                          Opacity(
+                            opacity: (isScanned || isRefused) ? 0.3 : 1.0,
+                            child: _buildQrCodeWidget((isScanned || isRefused) ? null : qrContent, ticketStatus),
                           ),
+                          SizedBox(height: 16.h),
+                          if (isScanned)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 24.w, vertical: 12.h),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade600,
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                'SCANNÉ',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            )
+                          else if (ticketStatus == 'En validation' && !isScanned && !isRefused)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 24.w, vertical: 12.h),
+                              decoration: BoxDecoration(
+                                color: Colors.orange,
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                'EN ATTENTE',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            )
+                          else if (isRefused)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 24.w, vertical: 12.h),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade800,
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                'REFUSÉ',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            )
+                          else if (isValidated && !isScanned && !isRefused)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w, vertical: 8.h),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                'NON SCANNÉ',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            ),
                           SizedBox(height: 20.h),
                           Text(
                             'CODE TICKET',
@@ -251,8 +273,7 @@ class _MesPassScreenState extends State<MesPassScreen> {
                           ),
                           SizedBox(height: 8.h),
                           Text(
-                            (ticketStatus == 'Valide' ||
-                                    ticketStatus == 'Utilisé')
+                            (!isScanned && !isRefused && (ticketStatus == 'Valide' || ticketStatus == 'Utilisé'))
                                 ? ticketCode
                                 : '*** *** ***',
                             style: TextStyle(
