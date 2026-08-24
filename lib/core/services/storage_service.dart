@@ -151,6 +151,25 @@ class StorageService {
     }
   }
 
+  // Heure de la dernière activité (pour l'inactivité)
+  Future<bool> saveLastActiveTime(int timestamp) async {
+    try {
+      final prefs = _prefs ?? await SharedPreferences.getInstance();
+      _prefs = prefs;
+      return await prefs.setInt('last_active_time', timestamp);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  int? getLastActiveTime() {
+    try {
+      return _prefs?.getInt('last_active_time');
+    } catch (_) {
+      return null;
+    }
+  }
+
   // Vérifie si un compte est déjà enregistré sur l'appareil (Style Wave)
   bool hasSavedAccount() {
     final phone = getPhoneNumber();

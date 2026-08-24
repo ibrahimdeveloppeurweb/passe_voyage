@@ -1218,7 +1218,7 @@ class _DemandeCreditScreenState extends State<DemandeCreditScreen> {
               ),
               SizedBox(height: 6.h),
               Text(
-                'Votre dossier est actuellement en cours d\'examen par notre équipe. Dès validation par le backoffice, vous recevrez une notification.',
+                "Votre dossier est actuellement en cours d\'examen par notre équipe. Dès validation par l'administration, vous recevrez une notification.",
                 style: TextStyle(
                   fontSize: 13.sp,
                   color: Colors.grey.shade600,

@@ -25,14 +25,14 @@ import 'package:flutter/foundation.dart';
 
 class AppRoutes {
   // API Configuration dynamique selon la plateforme (Android 10.0.2.2, iOS/macOS 127.0.0.1)
-  // static String get apiBaseUrl {
-  //   if (kIsWeb) return 'http://localhost:8000';
-  //   if (Platform.isAndroid) return 'http://10.0.2.2:8000';
-  //   return 'http://127.0.0.1:8000';
-  // }
-  static const String baseUrl = 'https://monpassvoyage.net/api';
+   static String get apiBaseUrl {
+     if (kIsWeb) return 'http://localhost:8000';
+     if (Platform.isAndroid) return 'http://10.0.2.2:8000';
+     return 'http://127.0.0.1:8000';
+   }
+  //static const String baseUrl = 'https://monpassvoyage.net/api';
 
-  //static String get baseUrl => '$apiBaseUrl/api';
+  static String get baseUrl => '$apiBaseUrl/api';
 
   static const String splash = '/';
   static const String phoneEntry = '/phone_entry';

@@ -41,6 +41,13 @@ class InactivityService with WidgetsBindingObserver {
     if (_isLocked) return;
     _inactivityTimer?.cancel();
     _inactivityTimer = Timer(timeoutDuration, _handleTimeout);
+    _saveLastActiveTime();
+  }
+
+  void _saveLastActiveTime() {
+    StorageService.getInstance().then((storage) {
+      storage.saveLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+    });
   }
 
   @override
@@ -48,6 +55,7 @@ class InactivityService with WidgetsBindingObserver {
     debugPrint('📱 [AppLifecycleState] $state');
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       _pausedTime ??= DateTime.now();
+      _saveLastActiveTime();
       _inactivityTimer?.cancel();
     } else if (state == AppLifecycleState.resumed) {
       if (_pausedTime != null) {

@@ -28,14 +28,28 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    if (isLocked && savedPhone.isNotEmpty) {
+    // Vérification de l'inactivité si l'application était tuée / fermée
+    bool shouldLockDueToInactivity = false;
+    if (!isLocked && isLoggedIn) {
+      final lastActive = storage.getLastActiveTime();
+      if (lastActive != null) {
+        final lastActiveDate = DateTime.fromMillisecondsSinceEpoch(lastActive);
+        final elapsed = DateTime.now().difference(lastActiveDate);
+        if (elapsed.inMinutes >= 2) { // 2 minutes max pour l'app Passager
+          shouldLockDueToInactivity = true;
+          await storage.setLocked(true);
+        }
+      }
+    }
+
+    if ((isLocked || shouldLockDueToInactivity) && savedPhone.isNotEmpty) {
       // Si la session est actuellement verrouillée -> Redirection obligatoire sur LoginScreen
       Navigator.pushReplacementNamed(
         context,
         AppRoutes.login,
         arguments: {'phoneNumber': savedPhone},
       );
-    } else if (isLoggedIn) {
+    } else if (isLoggedIn && !shouldLockDueToInactivity) {
       // Session authentifiée et déverrouillée -> Accès direct au Dashboard
       NotificationPushService.syncFcmToken();
       Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
